@@ -1,0 +1,367 @@
+---
+title: "Lecture 3 Practical: Extracting and importing data"
+format: html
+---
+
+# In this Practical
+
+In this Practical you will:
+
+1. Import data from both CSV and Parquet files
+2. Explore the DataFrames object
+3. Export data to various formats
+
+# 0. Before we begin
+
+First we'll need to install the packages we'll be using today. Run the code chunk below by clicking on the green play button in its top right corner. Alternatively, with the cursor inside the chunk, press <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Enter</kbd>, to run all the code in the chunk.
+
+```{r}
+# install.packages("arrow")
+```
+
+# 1. Module imports
+
+The first step in using any `R` package is to load it.
+
+Here we import `arrow` using the `library()` function.
+
+```{r}
+library(arrow)
+```
+
+# 2. Importing data
+
+There are three files that we will import and explore. They are:
+
+- **concrete.csv**
+
+This table contains a range of recipes for concrete – including cement, water, aggregate, and age — and the resulting compressive strength. Compressive strength is the "dependent variable", and the recipe amounts are the "independent variables".
+
+- **chemicalmanufacturing.csv**
+
+This table contains the yield (the dependent variable) as a function of a large number of manufacturing inputs and processes (the independent variables)
+
+- **backblaze.parquet**
+
+This is public time series data for computer hard drives used by a large cloud provider. For each harddrive, this time series data records its serial number as well as its failure status.
+
+We will import them with their relative path. Relative to this notebook, they are located up one folder (`..`) and in the `data` directory. Their paths are:
+
+- `../data/concrete.csv`
+- `../data/chemicalmanufacturing.csv`
+- `../data/backblaze.parquet`
+
+## 2.1 Import
+
+Import each of the above files by choosing between the following functions:
+
+- `read.csv()` ([documentation](https://cran.r-project.org/doc/manuals/r-release/R-data.html#index-read_002ecsv))
+- `read_parquet() ` ([documenation](https://arrow.apache.org/docs/r/reference/read_parquet.html))
+
+```{r}
+# Import the concrete CSV file
+
+# Set the path to the location of concrete.csv
+concrete = read.csv("../data/concrete.csv")
+```
+
+```{r}
+# Import chemical data
+# HINT: you might need to use skiprows to fix any errors
+# chemical = ...
+
+```
+
+```{r}
+# backblaze = ...
+
+```
+
+## 2.2 Display the table
+
+To preview the table you have a few options:
+
+- Use the function `head()` which displays the first six rows by default.
+- Quarto notebooks automatically display the final value in a chunk.
+
+```{r}
+# Preview each of the data frames using head()
+head(concrete)
+```
+
+```{r}
+# Preview the backblaze data frame by setting it as the final value in this chunk
+
+# Uncomment this line:
+# backblaze
+
+```
+
+# 3. Exploring the DataFrame
+
+The following functions are useful for understanding your imported data frame:
+
+- `names()` to get the names of each column
+- `nrow()` to get the number of rows
+- `dim()` to get the (row, columns) as a 2-element vector
+- `str()` to compactly display the structure
+- `summary()` to generate an automatic statistical summary of each column
+
+```{r}
+# How many rows does each data frame have? Which is the largest?
+
+nrow(concrete)
+
+# chemical...
+# backblaze...
+
+```
+
+```{r}
+# What are the names of the columns?
+names(concrete)
+
+# chemical...
+# backblaze...
+
+```
+
+```{r}
+# How many rows and columns does our table have? What are their data types?
+# Explore the metadata about this table using the method .info()
+str(concrete)
+
+# chemical...
+# backblaze...
+
+```
+
+```{r}
+# Use the summary() method on concrete to get a statistical summary of each column
+
+# concrete...
+
+```
+
+# 4. Selecting columns
+
+There are multiple ways to select columns from your data frame including:
+
+- `df["ColumnName"]` to get the column as a new single-column data frame.
+- `df$ColumnName` which returns the column as a vector.
+
+```{r}
+# Select the Age column from concrete using each of these methods
+
+# concrete...
+
+```
+
+
+Multiple columns can be selected at once by using a vector of column names. This returns a data frame that is a subset of the original:
+
+- `df[c("ColumnName1", "ColumnName2")]`
+
+For example, to select both the Age and Cement columns we would use: `concrete[c("Age", "Cement")]`
+
+Note the use of the `c()` function to create the vector of column names.
+
+```{r}
+# Select both the Age, Cement and Water columns from the concrete data frame
+
+# concrete...
+
+```
+
+
+It is possible to perform calculations over a whole vector of values.
+
+Functions that return a single value include:
+
+- `sum()`
+- `min()` and `max()`
+- `mean()` and `median()`
+
+There are also functions that will return lists of values:
+
+- `unique()` will return every unique value in a vector without duplicates.
+- `quantile()` will return a value for every quantile specified.
+
+Recall that we get a column of a data frame using the `$` operator, e.g., `df$ColumnName`.
+
+```{r}
+# What is the mean and median compressive strength of all of the concrete recipes?
+
+mean(concrete$CompressiveStrength)
+
+# median: concrete$...
+
+```
+
+```{r}
+# What are the unique age values in the Age column?
+unique(concrete$Age)
+```
+
+```{r}
+# What are the 25 and 75th quantiles of concrete age?
+quantile(concrete$Age, probs = c(0.25, 0.75))
+```
+
+```{r}
+# What is the 25th and 75th quantile of the concrete Compressive Strength?
+
+# concrete...
+
+```
+
+# 5. Indexing into data frames
+
+## 5.1 Accessing rows
+
+You can select particular rows of a data frame by specifying ranges of numerical indices inside the square bracket notation (`df[rows, ]`). The blank space after the comma indicates that we want all the columns. Vice versa, leaving it blank before the comma indicates all the rows (`df[,cols]`).
+
+Note that indices are integers starting from 1.
+
+- e.g. `concrete[50,]` for all columns of the 50 row, or `concrete[30:70,]` for all columns from rows 30 to 70.
+
+```{r}
+# Print row 50
+concrete[50,]
+```
+
+```{r}
+# Print rows 100-150
+concrete[50:150,]
+```
+
+## 5.2 Accessing cells
+
+Individual cells are accessed by specifying the row followed by the column. The column may be specified by name as well as its numerical index.
+
+- `concrete[50, 7]`
+- `concrete[50, "Age"]`
+
+```{r}
+# Get the value from the 47th row of the Age column using both methods
+
+# concrete...
+
+```
+
+We can mix slices of rows and columns:
+
+```{r}
+# Print a subset: rows 50-70 of just two columns
+concrete[50:70, c("Cement", "FlyAsh")]
+
+# Or the same thing but with a different style: which do you prefer?
+concrete[c("Cement", "FlyAsh")][50:70,]
+```
+
+5.3 Modifying a data frame
+
+We can modify both individual cells as well as full slices in a single command, e.g.
+
+- Update a single cell: `concrete[50, "Age"] <- 100`
+- Bulk update a slice: `concrete[50:70, "Age"] <-  concrete[50:70, "Age"] + 100`
+
+```{r}
+# Add 2 units of time to the Age of each row
+
+# concrete..
+
+```
+
+6. Filtering the DataFrame
+
+Filter rows using the .query("....") method:
+
+    e.g. concrete.query("Water > 150 and 400 < Cement < 500")
+
+concrete.query("Water > 150 and 400 < Cement < 500")
+
+# Compare the mean CompressiveStrength for mixtures with an age both less and greater than 30
+
+# Less than 30
+meanless30 = concrete.query("Age < 30")["CompressiveStrength"].mean()
+
+# Versus greater than 30...
+# meanplus30 = ...
+
+# Which is stronger?
+
+We can also use the "pure Python" filter to create a mask, e.g.:
+
+mask = (concrete["Water"] > 150) & (concrete["Water"] < 500)`
+concrete[mask]
+
+Use this method to filter the chemical DateFrame and show only those rows where ManufacturingProcess38 is 2:
+
+# mask = ...
+# chemical[mask]
+
+# For the ChemicalProcess table, find the mean Yield for each value of ManufacturingProcess38 (values: 0, 2, 3)
+# Does this process seem to make a big difference to the yield?
+
+yield0 = chemical.query("ManufacturingProcess38 == 0")["Yield"].mean()
+# yield2 =
+# yield3 =
+
+7. Advanced: Setting the index
+
+Take a look again at the backlaze data set:
+
+display(backblaze)
+
+The left-most column is the DataFrame index. Currently this is set simply as the row number (starting from 0).
+
+Is this the most natural index? What if we want to set the index to the date instead?
+
+We can use the method .set_index() to set any column as the index:
+
+backblaze_date_index = backblaze.set_index("date")
+display(backblaze_date_index)
+
+The reason we might do this is that now we can use our friend the .loc() method to index using dates (or date ranges):
+
+backblaze_date_index.loc["2013/05/10"]
+
+We could also index instead by serial_number.
+
+Set the index to serial_number and try indexing using one of the serial number ZJV4H4Q7:
+
+# backblaze_serial_index = ...
+
+# backblaze_serial_index.loc["ZJV4H4Q7"]
+
+Most often, it is most useful when an index is unique, i.e. an index points to a single row.
+
+This data set can be uniquely indexed by a combination of serial_number and date.
+
+Pandas allows for hierarchical indexes using the method .set_index([col1, col2, ...]):
+
+backblaze_multiindex = backblaze.set_index(
+    ["serial_number", "date"],
+).sort_index()
+display(backblaze_multiindex)
+
+Multiindexes allow you to select data base on one or more of the index values. If the DataFrame index is sorted, this can make selection across very large data sets fast and efficient.
+
+Here are some examples of indexing with multiindexes:
+
+# We can index one level, which returns a new DataFrame indexed by Date
+backblaze_multiindex.loc["Z3006275"]
+
+# We can index two levels by calling .loc() twice
+backblaze_multiindex.loc["Z3006275"].loc["2013/05/10"]
+
+# Or we can pass a tuple to loc() to do the same thing using the format:
+# df.loc[(level1, level2), :]
+backblaze_multiindex.loc[("Z3006275", "2013/05/10"), :]
+
+# Finally, set ranges as part of the indexes
+backblaze_multiindex.loc[
+    (["Z3006275", "Z3001Y9R", "Z3004WYG"], slice("2013/01/01", "2016/01/01")), :
+]
+
