@@ -62,18 +62,18 @@ Import each of the above files by choosing between the following functions:
 # Import the concrete CSV file
 
 # Set the path to the location of concrete.csv
-concrete = read.csv("../data/concrete.csv")
+concrete <- read.csv("../data/concrete.csv")
 ```
 
 ```{r}
 # Import chemical data
-# HINT: you might need to use skiprows to fix any errors
-# chemical = ...
+# HINT: you might need to use the skip= argument to fix any errors
+# chemical <- ...
 
 ```
 
 ```{r}
-# backblaze = ...
+# backblaze <- ...
 
 ```
 
@@ -264,7 +264,7 @@ concrete[c("Cement", "FlyAsh")][50:70,]
 We can modify both individual cells as well as full slices in a single command, e.g.
 
 - Update a single cell: `concrete[50, "Age"] <- 100`
-- Bulk update a slice: `concrete[50:70, "Age"] <-  concrete[50:70, "Age"] + 100`
+- Bulk update a slice: `concrete[50:70, "Age"] <- concrete[50:70, "Age"] + 100`
 
 ```{r}
 # Add 2 units of time to the Age of each row
@@ -273,44 +273,66 @@ We can modify both individual cells as well as full slices in a single command, 
 
 ```
 
-6. Filtering the DataFrame
+6. Filtering the data frame
 
-Filter rows using the .query("....") method:
+Filter rows using the `subset()` function and passing in an expression that evaluates to TRUE for the rows that you want.
 
-    e.g. concrete.query("Water > 150 and 400 < Cement < 500")
+You can specify which columns to return using the `select =` argument.
 
-concrete.query("Water > 150 and 400 < Cement < 500")
+- e.g. `subset(concrete, subset = (Water > 150) & (Cement > 400), select = c(Cement, Water, FlyAsh))`
 
+```{r}
+subset(concrete, subset = (Water > 150) & (Cement > 400), select = c(Age, Cement, Water))
+```
+
+```{r}
+subset(concrete, (Water > 150) & (Cement > 400) & (Cement < 500))
+```
+
+The `colMeans()` function can be used to find the mean of each (numeric) column in a data frame.
+
+```{r}
 # Compare the mean CompressiveStrength for mixtures with an age both less and greater than 30
 
 # Less than 30
-meanless30 = concrete.query("Age < 30")["CompressiveStrength"].mean()
+meanless30 <- colMeans(  
+  subset(concrete, subset = Age < 30, select = CompressiveStrength)
+)
 
 # Versus greater than 30...
 # meanplus30 = ...
 
 # Which is stronger?
+```
 
-We can also use the "pure Python" filter to create a mask, e.g.:
+We can also use square bracket notation to create a mask, e.g.:
 
-mask = (concrete["Water"] > 150) & (concrete["Water"] < 500)`
-concrete[mask]
+```{r}
+mask <- concrete["Water"] > 150 & concrete["Water"] < 500
+concrete[mask,]
+```
 
-Use this method to filter the chemical DateFrame and show only those rows where ManufacturingProcess38 is 2:
+Use this method to filter the `chemical` data frame and show only those rows where `ManufacturingProcess38` is 2:
 
+```{r}
 # mask = ...
 # chemical[mask]
 
+```
+
+```{r}
 # For the ChemicalProcess table, find the mean Yield for each value of ManufacturingProcess38 (values: 0, 2, 3)
 # Does this process seem to make a big difference to the yield?
 
-yield0 = chemical.query("ManufacturingProcess38 == 0")["Yield"].mean()
+yield0 <- colMeans(subset(chemical, subset = ManufacturingProcess38 == 0, select = Yield))
 # yield2 =
 # yield3 =
 
-7. Advanced: Setting the index
+```
 
-Take a look again at the backlaze data set:
+# 7. Advanced: Setting the row names
+
+Take a look again at the backblaze data set:
 
 display(backblaze)
 
