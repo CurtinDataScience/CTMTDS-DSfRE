@@ -15,8 +15,8 @@ In this Practical you will:
 
 First we'll need to install the packages we'll be using today. Run the code chunk below by clicking on the green play button in its top right corner. Alternatively, with the cursor inside the chunk, press <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Enter</kbd>, to run all the code in the chunk.
 
-```{r}
-# install.packages("arrow")
+```{r eval=FALSE}
+install.packages("arrow")
 ```
 
 # 1. Module imports
@@ -73,8 +73,7 @@ concrete <- read.csv("../data/concrete.csv")
 ```
 
 ```{r}
-# backblaze <- ...
-
+backblaze <- read_parquet("../data/backblaze_event.parquet")
 ```
 
 ## 2.2 Display the table
@@ -90,10 +89,10 @@ head(concrete)
 ```
 
 ```{r}
-# Preview the backblaze data frame by setting it as the final value in this chunk
+# Preview the backblaze data frame by just typing its name in this chunk
 
 # Uncomment this line:
-# backblaze
+#backblaze
 
 ```
 
@@ -300,7 +299,7 @@ meanless30 <- colMeans(
 )
 
 # Versus greater than 30...
-# meanplus30 = ...
+# meanplus30 <- ...
 
 # Which is stronger?
 ```
@@ -315,7 +314,7 @@ concrete[mask,]
 Use this method to filter the `chemical` data frame and show only those rows where `ManufacturingProcess38` is 2:
 
 ```{r}
-# mask = ...
+# mask <- ...
 # chemical[mask]
 
 ```
@@ -332,58 +331,59 @@ yield0 <- colMeans(subset(chemical, subset = ManufacturingProcess38 == 0, select
 
 # 7. Advanced: Setting the row names
 
-Take a look again at the backblaze data set:
+Take a look again at the `backblaze` data set:
 
-display(backblaze)
+```{r}
+head(backblaze)
+```
 
-The left-most column is the DataFrame index. Currently this is set simply as the row number (starting from 0).
+Each row in a data frame has a unique and somewhat hidden "row name" which by default is not shown in the output of a code chunk. If you display a data frame by typing its name into the Console you'll see a column of numbers down the left-hand margin.
 
-Is this the most natural index? What if we want to set the index to the date instead?
+```
+> backblaze
+  serial_number       model                date     event
+1        Z30051R6 ST4000DM000 2013-05-10 08:00:00 installed
+2        Z3005Z1F ST4000DM000 2013-05-10 08:00:00 installed
+3        Z3005HDX ST4000DM000 2013-05-10 08:00:00 installed
+```
 
-We can use the method .set_index() to set any column as the index:
+We can show these "row names" in chunk outputs by inserting `rownames.print=TRUE` into the preamble of the code chunk found in the curly braces.
 
-backblaze_date_index = backblaze.set_index("date")
-display(backblaze_date_index)
+```{r  rownames.print=TRUE}
+head(backblaze)
+```
 
-The reason we might do this is that now we can use our friend the .loc() method to index using dates (or date ranges):
+By default, these row names are simply the row number (starting from 1).
 
-backblaze_date_index.loc["2013/05/10"]
+These row names can be used to filter the rows of a data frame like any other column, and accessed using the `row.names()` function.
 
-We could also index instead by serial_number.
+```{r}
+# Get all the rows with names between 100 and 110 inclusive
+backblaze[rownames(backblaze) %in% 100:110,]
+```
 
-Set the index to serial_number and try indexing using one of the serial number ZJV4H4Q7:
+One important property is that even if rows are filtered out or dropped from a data frame, the original row name is not changed.
 
-# backblaze_serial_index = ...
+However, in practice, it is recommended to filter rows by their row number directly or by the values in the other columns. Alternatively, create a new column which is the row number and filter according to that.
 
-# backblaze_serial_index.loc["ZJV4H4Q7"]
+```{r}
+backblaze$row_number <- row.names(backblaze)
+backblaze
+```
 
-Most often, it is most useful when an index is unique, i.e. an index points to a single row.
+We can also use the `row.names()` function to set the values of the row names:
 
-This data set can be uniquely indexed by a combination of serial_number and date.
+```{r}
+# Set the new row names to be the old row name prefixed with an R
+row.names(backblaze) <- paste0("R", row.names(backblaze))
+head(backblaze)
+```
 
-Pandas allows for hierarchical indexes using the method .set_index([col1, col2, ...]):
+Row names can be reset to the row number by `row.names(df) <- NULL`.
 
-backblaze_multiindex = backblaze.set_index(
-    ["serial_number", "date"],
-).sort_index()
-display(backblaze_multiindex)
+```{r}
+row.names(backblaze) <- NULL
+head(backblaze)
+```
 
-Multiindexes allow you to select data base on one or more of the index values. If the DataFrame index is sorted, this can make selection across very large data sets fast and efficient.
-
-Here are some examples of indexing with multiindexes:
-
-# We can index one level, which returns a new DataFrame indexed by Date
-backblaze_multiindex.loc["Z3006275"]
-
-# We can index two levels by calling .loc() twice
-backblaze_multiindex.loc["Z3006275"].loc["2013/05/10"]
-
-# Or we can pass a tuple to loc() to do the same thing using the format:
-# df.loc[(level1, level2), :]
-backblaze_multiindex.loc[("Z3006275", "2013/05/10"), :]
-
-# Finally, set ranges as part of the indexes
-backblaze_multiindex.loc[
-    (["Z3006275", "Z3001Y9R", "Z3004WYG"], slice("2013/01/01", "2016/01/01")), :
-]
-
+Note that row names must be **unique**; duplicated or missing row names are not permitted.
