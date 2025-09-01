@@ -16,6 +16,7 @@ In this Practical you will:
 First we'll need to install the packages we'll be using today. Run the code chunk below by clicking on the green play button in its top right corner. Alternatively, with the cursor inside the chunk, press <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Enter</kbd>, to run all the code in the chunk.
 
 ```{r eval=FALSE}
+Sys.setenv(ARROW_WITH_BROTLI = "ON")
 install.packages("arrow")
 ```
 
@@ -73,7 +74,7 @@ concrete <- read.csv("../data/concrete.csv")
 ```
 
 ```{r}
-backblaze <- read_parquet("../data/backblaze_event.parquet")
+backblaze <- read_parquet("../data/backblaze.parquet")
 ```
 
 ## 2.2 Display the table
