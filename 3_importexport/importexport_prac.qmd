@@ -82,8 +82,8 @@ concrete <- read.csv("../data/concrete.csv")
 
 To preview the table you have a couple of options:
 
-- Use the `head()` function to print to screen the first six rows by default.
-- Type out the name of the object as the last line in a code chunk. Quarto notebooks automatically display the final value in a chunk.
+- Use the `head()` function to print to screen the first few rows (6 by default).
+- Type out the name of the object in a code chunk and RStudio will automatically displays its content when the chunk is executed.
 
 ```{r}
 # Preview each of the data frames using head()
@@ -94,7 +94,7 @@ head(concrete)
 # Preview the backblaze data frame by just typing its name in this chunk
 
 # Uncomment this line:
-#backblaze
+# backblaze
 
 ```
 
@@ -272,7 +272,7 @@ We can modify both individual cells as well as bulk slices of a data frame in a 
 
 ```
 
-6. Filtering the data frame
+# 6. Filtering the data frame
 
 Filter down to a subset of rows by using the `subset()` function. You must provide an expression that evaluates to TRUE for the rows that you want.
 
