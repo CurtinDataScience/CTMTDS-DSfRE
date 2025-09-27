@@ -56,14 +56,14 @@ Firstly, we need to identify which row contains the outlier. We can use the `whi
 
 ```{r}
 # idx <- concrete$...> ... 
-
+  (idx <- which(concrete$CompressiveStrength > 200))
 ```
 
 Then we can use the square bracket notation (`[]`) with a *negated* index to remove the row:
 
 ```{r}
 # concrete[-idx,]
-
+  concrete[-idx,]
 ```
 
 **Note:** this returns a new data frame with the row removed; it will not alter the original data frame unless you assign the output back to the original data frame.
@@ -82,7 +82,7 @@ First, let's calculate the median and interquartile range using `quantile()`:
 quartiles <- quantile(concrete$CompressiveStrength, probs = c(0.25, 0.5, 0.75))
 
 # iqr <- ...
-
+  (iqr <- quartiles[3] - quartiles[1])
 ```
 
 There is also the function `IQR()` which calculates the IQR of a vector of values.
@@ -92,6 +92,9 @@ Using these quartiles, we can use square bracket notation `[]` to filter the dat
 ```{r}
 # concretefilter <- concrete[(concrete$CompressiveStrength > quartiles[2] - 3*iqr) & (...),]
 
+  concretefiltered <- 
+    concrete[(concrete$CompressiveStrength > quartiles[2] - 3*iqr) 
+             & (concrete$CompressiveStrength < quartiles[2] + 3*iqr),]
 ```
 
 Finally, let's visualise our dataset again using a box plot to confirm the results of our outlier removal:
@@ -126,7 +129,7 @@ First, load the new data as a data frame:
 ```{r}
 # concrete2 <- read.csv("...")
 # concrete2
-
+  concrete2 <- read.csv("../data/concrete-2.csv")
 ```
 
 Since these two tables have identical columns, you can stack or "bind" them using the `rbind()` function, e.g., `rbind(df1, df2, ...)`
@@ -135,7 +138,7 @@ Combine `concrete` and `concrete2` using this function:
 
 ```{r}
 # rbind(...)
-
+  rbind(concrete, concrete2)
 ```
 
 **Question:** What is the shape of the combined table?
@@ -152,7 +155,8 @@ Let's load the data about each of these models from the CSV located at `../data/
 
 ```{r}
 # models <- read.csv(...)
-
+  models <- read.csv("../data/backblaze-models.csv")
+  models
 ```
 
 We want to merge these tables: for every row in the original `backblaze` data frame, we want to include this additional data about the drive.
@@ -164,7 +168,7 @@ We do this using the `merge()` function:
 
 ```{r}
 # merge(x = ..., y = ..., by.x = "...", by.y = "...")
-
+  merge(x = backblaze, y = models, by.x = "model", by.y = "model")
 ```
 
 Suppose we're only interested in the operating power from the `models` data frame.
@@ -175,7 +179,7 @@ Try merging _only_ the `operating_power` column.
 
 ```{r}
 # merge(x = ..., y = ..., by.x = "...", by.y = "...")
-
+  merge(x = backblaze, y = models[c("model", "operating_power")], by.x = "model", by.y = "model")
 ```
 
 # 3. Aggregating
@@ -237,6 +241,13 @@ Your goal is to:
 # monthly <- aggregate(...)
 # plot(monthly, ...)
 
+  grouping <- as.Date(cut(backblaze$date, "months"))
+  monthly <- aggregate(x = backblaze$failure, by = list(Date = grouping), FUN = sum)
+
+  plot(monthly, 
+       type = "h", 
+       main = "Monthly hard drive failures", 
+       ylab = "No. failures")
 ```
 
 # 4. Advanced
@@ -255,4 +266,21 @@ You will need to:
 ```{r}
 # ...
 
+  backblaze_oppower <- merge(x = backblaze, 
+                             y = models[c("model", "operating_power")], 
+                             by.x = "model", 
+                             by.y = "model")
+
+  grouping <- as.Date(cut(backblaze_oppower$date, "7 day"))
+  seven_daily <- aggregate(x = backblaze_oppower$operating_power, 
+                           by = list(Date = grouping), 
+                           subset = backblaze_oppower$failure == 1,
+                           FUN = "sum")
+
+  plot(seven_daily,
+       type = "h", 
+       main = "7-day failed hard drive operating power", 
+       ylab = "Power")
 ```
+
+
