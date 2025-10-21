@@ -117,62 +117,92 @@ According to its documentation found at <https://ggplot2.tidyverse.org/>:
 Before doing statistical analysis, you need to understand the underlying data and how it is distributed.
 
 `ggplot2` makes a lot of this easier, less time consuming, and pretty by default.
+
 We'll use `ggplot2`'s `geom_histogram()` function to plot a histogram.
 
-seaborn.set_theme(style="ticks")
-seaborn.displot(data=long_run_df, x="age", col="sex", kde=True)
+```{r}
+theme_set(theme_classic())
 
-plt.suptitle("Breakdown of runner age conditioned by sex")
-plt.tight_layout()
+plot1 <- 
+  ggplot(data = long_run_df) + 
+  geom_histogram(mapping = aes(x = age, fill = sex), binwidth = 1) +
+  geom_density(mapping = aes(x = age, y = after_stat(count))) +
+  facet_wrap(vars(sex)) +
+  labs(title = "Breakdown of Runner Age by Sex", 
+       x = "Age", y = "Count", fill = "Sex")
+plot1
+```
 
-❓ What relationships can you see in the plot above? Is there anything worth investigating?
-Seaborn theme
+**Question:** What relationships can you see in the plot above? Is there anything worth investigating?
 
-Seaborn allows us to update all future figures by setting a theme, without needing to pass in arguments.
+### `ggplot2` theme
 
-Try reproducing the above plot but with the pre-made theme style called darkgrid
+`ggplot2` allows you to update all future figures by setting a theme, without needing to pass in new arguments.
 
-seaborn.set_theme(style="darkgrid")
+Try reproducing the above plot but with the pre-made theme called `theme_dark()`.
 
-seaborn.displot(data=long_run_df, x="age", col="sex", kde=True)
+```{r}
+theme_set(theme_dark())
 
-plt.suptitle("Breakdown of runner age conditioned by sex")
-plt.tight_layout()
+plot1
+```
 
-Scatter Matrix for Data exploration
+### Scatter Matrix for Data exploration
 
-A common technique for exploring relationships is called a scatter matrix, which scatters each variable against another. We can also assign colours based on categorcal attributes, such as sex
+A common technique for exploring relationships is called a scatter matrix, which scatters each variable against another. We can also assign colours based on categorical attributes such as sex.
 
-# note that darkgrid theme set above is still active
-seaborn.pairplot(long_run_df, hue="sex", plot_kws={"alpha": 0.1}, palette={"M": "blue", "F": "red"})
+```{r}
+# note that theme_dark() set above is still active
 
-❓ Questions
+library(GGally)
+ggscatmat(data = long_run_df, 
+          columns = c(1,4,6), alpha = 0.1, color = "sex")
+```
 
-    What trends can you see in the data above?
-    Discuss what other visualisations might you make (using matplotlib or seaborn) to explore relationships in the data? How might you condition or display the data beforehand?
+### Questions
 
-Make another two more plots based on your discussion, possibly creating a new, conditioned dataframe to plot
+1. What trends can you see in the data above?
 
-# Vis 1
+2. Discuss what other visualisations might you make (using `plot()` or `ggplot2`) to explore relationships in the data? How might you condition or display the data beforehand?
 
-# Vis 2
+Make another two more plots based on your discussion, possibly creating a new, conditioned data frame to plot:
 
-Belt wear
+```{r}
+# Visualisation 1
 
-Let's use the belt wear data from the lecture to explore what makes a good visualisation
+```
 
-    The thickness along an 1800mm long drive-belt is measured at various points ("X") on installation
-    The thickness at these points is then re-measured at several other dates and noted in "Result" as a measurement in mm
-    This data is stored in a spreadsheet
+```{r}
+# Visualisation 2
+```
 
-belt_wear_df = pd.read_csv("../data/belt.csv")
+## Belt wear
+
+Let's use the belt wear data from the lecture to explore what makes a good visualisation.
+
+- The thickness along an 1800 mm long drive-belt is measured at various points ("X") on installation.
+- The thickness at these points is then re-measured at several other dates and noted in "Result" as a measurement in millimetres.
+- This data is stored in a spreadsheet.
+
+```{r}
+belt_wear_df = read.csv("../data/belt.csv")
 belt_wear_df
+```
 
-# Belt wear info, describe, etc
+```{r}
+# Belt wear str(), summary(), etc.
 
- 
+```
 
- 
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
 
 # Get date to correct type data
 belt_wear_df["Test Date"] = pd.to_datetime(belt_wear_df["Test Date"])
@@ -181,6 +211,12 @@ belt_wear_df["Relative Test Date (days)"] = (
     belt_wear_df["Test Date"] - belt_wear_df["Test Date"].min()
 ).dt.days
 belt_wear_df.info()
+```
+
+ 
+
+ 
+
 
 ❓ Whats wrong with the below plot?
 
