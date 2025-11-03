@@ -362,6 +362,8 @@ These row names can be used to filter the rows of a data frame like any other co
 backblaze[rownames(backblaze) %in% 100:110,]
 ```
 
+The `%in%` operator returns `TRUE` if the value mentioned before it is found in the range specified after it.
+
 One important property is that even if rows are filtered out or dropped from a data frame, the original row name is not changed.
 
 However, in practice, it is recommended to filter rows by their row index directly or by the values in the other columns. Alternatively, create a new column which is the row name and filter according to that.
