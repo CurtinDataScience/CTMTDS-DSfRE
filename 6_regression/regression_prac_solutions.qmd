@@ -202,11 +202,11 @@ boxplot(concrete_df$CompressiveStrength/model5$fitted.values,
         main = "Ratio of original to fitted values")
 ```
 
-# 3. Transformations
+# 4. Transformations
 
 Often the relationship between the response and the explanatory variables is not linear and requires some transformation to make it so. In this final section we consider how to construct models from data that has been linearised using a transformation.
 
-## 3.1 The model: ore fraction based on light absorbance
+## 4.1 The model: ore fraction based on light absorbance
 
 Consider the following dataset that measures:
 
@@ -217,17 +217,17 @@ Consider the following dataset that measures:
 
 ```{r}
 ore_df <- read.csv("../data/ore.csv")
-ore_df <- ore_df[order(ore_df$Amount),] # sorts rows in ascending `Amount`
+ore_df <- ore_df[order(ore_df$Absorbance),] # sorts rows in ascending `Amount`
 str(ore_df)
 ```
 
 First, plot the ore fraction (`Amount`) as a function of the `Absorbance`. Does it look linear?
 
 ```{r}
-plot(Absorbance ~ Amount, data = ore_df)
+plot(Amount ~ Absorbance, data = ore_df)
 ```
 
-## 3.2 Transforming the data
+## 4.2 Transforming the data
 
 The relationship between these two variables is clearly not linear. We hope that there exists a simple transformation that make this data linear.
 
@@ -242,27 +242,27 @@ Work you way through each of the following transformations applied to the `Amoun
 Using the formula notation in `R` we can put these transformations directly in the left-hand side of tilde  in `plot()` or `lm()`
 
 ```{r}
-plot(sqrt(Absorbance) ~ Amount, data = ore_df)
+plot(sqrt(Amount) ~ Absorbance, data = ore_df)
 ```
 
 ```{r}
 # plot(log(...) ~ ..., data = ...)
-plot(log(Absorbance) ~ Amount, data = ore_df)
+plot(log(Amount) ~ Absorbance, data = ore_df)
 ```
 
 ```{r}
 # Another plot()
-plot(Absorbance^(1/3) ~ Amount, data = ore_df)
+plot(Amount^(1/3) ~ Absorbance, data = ore_df)
 ```
 
 ```{r}
 # Another plot()
-plot(Absorbance^2 ~ Amount, data = ore_df)
+plot(Amount^2 ~ Absorbance, data = ore_df)
 ```
 
 ```{r}
 # Another plot()
-plot(Absorbance^3 ~ Amount, data = ore_df)
+plot(Amount^3 ~ Absorbance, data = ore_df)
 ```
 
 Once you have found the best transformation, we can create a model on the linearised data:
@@ -271,26 +271,26 @@ Once you have found the best transformation, we can create a model on the linear
 ```{r}
 # model <- lm(... ~ Amount, data = ...)
 # summary(model6)
-ore_model <- lm(Absorbance^(1/3) ~ Amount, data = ore_df)
+ore_model <- lm(Amount^(1/3) ~ Absorbance, data = ore_df)
 summary(ore_model)
 ```
 
-## 3.3 Assessing goodness of fit
+## 4.3 Assessing goodness of fit
 
 How does well does this model work for our transformed data set?
 
 Let's plot the model, residuals, and QQ plot:
 
 ```{r}
-plot(Absorbance^(1/3) ~ Amount, data = ore_df)
-lines(ore_df$Amount, ore_model$fitted.values, col = "red")
+plot(Amount^(1/3) ~ Absorbance, data = ore_df)
+lines(ore_df$Absorbance, ore_model$fitted.values, col = "red")
 ```
 
 ```{r}
 plot(ore_model)
 ```
 
-## 3.4 Confidence interval
+## 4.4 Confidence interval
 
 Remember that our model is subject to a certain amount of uncertainty which is captured by the **confidence** and **prediction** intervals.
 
@@ -308,7 +308,7 @@ predictions <- predict(ore_model, interval = "prediction")
 head(predictions)
 ```
 
-## 3.5 Inverting the transformation
+## 4.5 Inverting the transformation
 
 To make predictions of the actual ore fraction, we need to reverse the transformation so that the predicted values are in the original units, i.e., apply the inverse transformation.
 
@@ -323,9 +323,9 @@ pi_lwr = predictions[,"lwr"]^3
 pi_upr = predictions[,"upr"]^3
 
 # Use polygon() to plot the shaded prediction interval
-plot(Absorbance ~ Amount, data = ore_df, main = "Ore Model")
-lines(ore_df$Amount, fitted_values, col = "blue", lwd = 3)
-polygon(x = c(ore_df$Amount, rev(ore_df$Amount)), 
+plot(Amount ~ Absorbance, data = ore_df, main = "Ore Model")
+lines(ore_df$Absorbance, fitted_values, col = "blue", lwd = 3)
+polygon(x = c(ore_df$Absorbance, rev(ore_df$Absorbance)), 
         y = c(pi_upr, rev(pi_lwr)), 
         col = rgb(0,0,1,0.2), lty = 0)
 ```
