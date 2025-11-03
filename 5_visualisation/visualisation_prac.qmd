@@ -8,7 +8,7 @@ format: html
 In this practical you will:
 
 1. Create visualisations in `R` using the `plot()` function in the `base` package.
-2. Try using `ggplot2` to make more advanced plots.
+2. Try using some specialist function sin the `graphics` package to make more advanced plots.
 3. Explore statistical visualisations techniques
 
 # 1. Module imports
@@ -17,21 +17,22 @@ For this practical we first need to load any packages we will use.
 
 The `plot()` is part of the `base` package that is automatically loaded whenever you start `R`. The `graphics` package also has some plotting functions and it also is loaded automatically.
 
-We'll also be using a new library, `ggplot2`, which allows us to do advanced plotting more easily than use the `base` plotting functions.
 
 ```{r}
-library(ggplot2)
+# These lines are unnecessary
+# library(base)
+# library(graphics)
 ```
 
 # 2. Importing, cleaning, and first visualisations
 
 The first steps in trying to extract insights out of data is to import it and clean it. 
 
-For this practical, we'll be using data on the finish times of athletes in various foot races frp, across the world.
+For this practical, we'll be using data on the finish times of athletes in various foot races from across the world.
 
 ```{r}
-run_data_path = "../data/run17.csv"
-run_df = read.csv(run_data_path)
+run_data_path <- "../data/run17.csv"
+run_df <- read.csv(run_data_path)
 run_df
 ```
 
@@ -50,21 +51,18 @@ str(run_df)
 
 ```{r}
 # Summary - check to see if any columns have missing values (NA's)
-  summary(run_df)
-
+summary(run_df)
 ```
 
 ```{r}
 # Unique City
-  unique(run_df$city)
-
+unique(run_df$city)
 ```
 
 ```{r}
 # Unique values of other categorical variables
-  unique(run_df$sex)  
-  unique(run_df$event)
-  
+unique(run_df$sex)  
+unique(run_df$event)
 ```
 
 ## Preparing a visualisation
@@ -104,76 +102,101 @@ legend("bottomright", legend = c("Male", "Female"), pch = 20, col = c("blue", "r
 
 ```
 
-# `ggplot2` - Advanced visualisation
+# Advanced visualisation
 
-`ggplot2` is another `R` package with a different approach to building plots in `R`.
+`graphics` is another `R` package with specialised functions for particular plot types.
 
-According to its documentation found at <https://ggplot2.tidyverse.org/>:
+The built-in `R` documentation lists the various plots available to use from this package.
 
-> `ggplot2` is a system for declaratively creating graphics, based on [The Grammar of Graphics](https://link.springer.com/book/10.1007/0-387-28695-0). You provide the data, tell `ggplot2` how to map variables to aesthetics, what graphical primitives to use, and it takes care of the details.
+```{r}
+# Open the help page
+ help(package = "graphics")
+```
 
 ## Distributional understanding
 
 Before doing statistical analysis, you need to understand the underlying data and how it is distributed.
 
-`ggplot2` makes a lot of this easier, less time consuming, and pretty by default.
-
-We'll use `ggplot2`'s `geom_histogram()` function to plot a histogram.
+We'll use `hist()` to plot a histogram.
 
 ```{r}
-theme_set(theme_classic())
+hist(long_run_df$age, main = "Breakdown of Runner Age",
+     xlab = "Age (years)", ylab = "Count")
+```
 
-plot1 <- 
-  ggplot(data = long_run_df) + 
-  geom_histogram(mapping = aes(x = age, fill = sex), binwidth = 1) +
-  geom_density(mapping = aes(x = age, y = after_stat(count))) +
-  facet_wrap(vars(sex)) +
-  labs(title = "Breakdown of Runner Age by Sex", 
-       x = "Age", y = "Count", fill = "Sex")
-plot1
+We can overlay different subsets of the data, conditioned on a particular variable, to reveal any relationships that might be present.
+
+```{r}
+sex_colours <- c(rgb(1, 0, 0, 0.5), rgb(0, 0, 1, 0.5)) # 20% transparent red and blue
+
+hist(female_df$age, col = sex_colours[1], 
+     main = "Breakdown of runner age conditioned by sex",
+     xlab = "Age (years)", ylab = "Count")
+hist(male_df$age, col = sex_colours[2], add = TRUE)
+legend("topright", legend = c("Female", "Male"), fill = sex_colours)
 ```
 
 **Question:** What relationships can you see in the plot above? Is there anything worth investigating?
 
-### `ggplot2` theme
+### Scatterplot Matrix for Data exploration
 
-`ggplot2` allows you to update all future figures by setting a theme, without needing to pass in new arguments.
+A common technique for exploring relationships is called a scatterplot matrix, which scatters each variable against another. We can also assign colours based on categorical attributes such as sex.
 
-Try reproducing the above plot but with the pre-made theme called `theme_dark()`.
+The `plot()` function in `R` is "smart" in the sense that depending on what you give it as input, it will guess at what a good visualisation might be based on the types of variables. However, it is not always helpful.
 
 ```{r}
-theme_set(theme_dark())
-
-plot1
+plot(long_run_df[c("bib", "sex", "age", "net_sec", "event")])
 ```
 
-### Scatter Matrix for Data exploration
-
-A common technique for exploring relationships is called a scatter matrix, which scatters each variable against another. We can also assign colours based on categorical attributes such as sex.
+The `pairs()` function gives us more control over plotting a scatterplot matrix. Note that we can only pass it _numerical_ variables, not categorical ones, i.e., `age`, and `net_sec`. Strictly speaking the `bib` variable is categorical variable since it makes no sense to do arithmetic with athletes' bib numbers.
 
 ```{r}
-# note that theme_dark() set above is still active
-
-library(GGally)
-ggscatmat(data = long_run_df, 
-          columns = c(1,4,6), alpha = 0.1, color = "sex")
+pairs(long_run_df[c("bib", "age", "net_sec")],
+      main = "Scatterplot Matrix conditioned by sex",
+      col = sex_colours[factor(long_run_df$sex)],
+      pch = 16, cex = 0.5)
 ```
 
 ### Questions
 
 1. What trends can you see in the data above?
 
-2. Discuss what other visualisations might you make (using `plot()` or `ggplot2`) to explore relationships in the data? How might you condition or display the data beforehand?
+2. Discuss what other visualisations might you make (using `plot()` or `hist()`) to explore relationships in the data? How might you condition or display the data beforehand?
 
 Make another two more plots based on your discussion, possibly creating a new, conditioned data frame to plot:
 
 ```{r}
 # Visualisation 1
-
+hist(female_df$net_sec, col = sex_colours[1], 
+     main = "Breakdown of finish times conditioned by sex",
+     xlab = "Time (seconds)", ylab = "Count")
+hist(male_df$net_sec, col = sex_colours[2], add = TRUE)
+legend("topright", legend = c("Female", "Male"), fill = sex_colours)
 ```
 
 ```{r}
 # Visualisation 2
+
+dist_colours = c(rgb(1, 0, 1, 0.5), rgb(0, 1, 0, 0.5))
+
+male_10M_df <- subset(run_df, subset = event == "10 Mile" & sex == "M")
+male_5K_df <- subset(run_df, subset = event == "5K" & sex == "M")
+
+min_age <- min(run_df$age, na.rm = TRUE)
+max_age <- max(run_df$age, na.rm = TRUE)
+
+hist(male_10M_df$age,
+     freq = FALSE,
+     #breaks = 20,
+     col = dist_colours[1], 
+     main = "Breakdown of mens ages conditioned by race length",
+     xlab = "Age (years)", ylab = "Density",
+     xlim = c(min_age, max_age))
+hist(male_5K_df$age, 
+     freq = FALSE,
+     breaks = 20,
+     col = dist_colours[2], add = TRUE)
+legend("topright", legend = c("10 Mile", "5K"), fill = dist_colours)
 ```
 
 ## Belt wear
@@ -191,67 +214,75 @@ belt_wear_df
 
 ```{r}
 # Belt wear str(), summary(), etc.
-
+str(belt_wear_df)
 ```
 
 ```{r}
-
+summary(belt_wear_df)
 ```
 
 ```{r}
-
+unique(belt_wear_df$Test.Date)
 ```
 
 ```{r}
+# Convert dates to correct data type, a "Date-Time" object
+belt_wear_df$Test.Date <- as.POSIXct(belt_wear_df$Test.Date)
 
-# Get date to correct type data
-belt_wear_df["Test Date"] = pd.to_datetime(belt_wear_df["Test Date"])
+first_test_date <- min(belt_wear_df$Test.Date)
+
 # Create a "relative test date" column
-belt_wear_df["Relative Test Date (days)"] = (
-    belt_wear_df["Test Date"] - belt_wear_df["Test Date"].min()
-).dt.days
-belt_wear_df.info()
+belt_wear_df["Relative Test Date (days)"] <- difftime(belt_wear_df$Test.Date, first_test_date, units = "days") # out as to days
+
+head(belt_wear_df)
 ```
 
- 
-
- 
-
-
-❓ Whats wrong with the below plot?
+**Q:** Whats wrong with the below plot?
 
 Run the below cell to produce a figure, and think about what may be wrong
 
-seaborn.scatterplot(belt_wear_df, x="X", y="Result", hue="Test Date")
+```{r}
+unique_dates <- unique(belt_wear_df$Test.Date)
+date_colours <- rainbow(length(unique_dates))
 
-🏆 Challenge: Create a better plot using the elements of visualisations shown in the lecture:
+plot(x = belt_wear_df$X, y = belt_wear_df$Result, 
+     col  = date_colours[factor(belt_wear_df$Test.Date)])
+```
 
-    Scale
-    Conditioning
-    Perception - Colour and length
-    Transformations
-    Context
-    Smoothing and other large data considerations Not all of these may be applicable
+**Challenge:** Create a better plot using the elements of visualisations shown in the lecture:
 
-Some hints and suggestions (click me):
+- Scale
+- Conditioning
+- Perception - Colour and length
+- Transformations
+- Context
+- Smoothing and other large data considerations Not all of these may be applicable
 
-    Make the plot bigger with plt.figure(figsize=(x,y)) (you will need to create the figure before plotting, otherwise a second figure is made and the first is unchanged)
-    Create a "Relative Test Date (days)" column and colour by that, rather than an absolute date
-    Use a colour scale (such as 'viridis') for the test dates , not random colours. See here
-    Connect the lines for a given date
-    Include a legend
-    Use x and y axes labels that are easier to understand
-        What actually are "X" and "Result"?
-        Include units!
-    Set the y-axes limits properly
-    Create a good title with plt.suptitle (short for super title)
+Some hints and suggestions:
 
-To do all of this, read the scatterplot documentation and find the correct methods.
+- Make the plot bigger with `plt.figure(figsize=(x,y))` (you will need to create the figure before plotting, otherwise a second figure is made and the first is unchanged)
+- Create a "Relative Test Date (days)" column and colour by that, rather than an absolute date
+- Use a colour scale (such as 'viridis') for the test dates , not random colours. See [here](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html).
+- Connect the lines for a given date
+- Include a legend
+- Use x and y axes labels that are easier to understand
+  - What actually are "X" and "Result"?
+  - Include units!
+- Set the y-axes limits properly
+- Create a good title with the `main = ` argument to `plot()`.
+
+To do all of this, read the `plot()` documentation and specify the right arguments.
 
 Talk to your neighbours and see what they do!
 
 # Make your plot better in this cell!
-seaborn.scatterplot(belt_wear_df, x="X", y="Result", hue="Test Date")
+
+```{r}
+
+```
+
+
+
 
 Exploring complex relationships in Concrete data
 
