@@ -1,0 +1,453 @@
+---
+title: "Practical 5: Visualisation"
+subtitle "Solutions"
+format: html
+---
+
+# In this practical
+
+In this practical you will:
+
+1. Create visualisations in `R` using the `plot()` function in the `base` package.
+2. Try using some specialist function sin the `graphics` package to make more advanced plots.
+3. Explore statistical visualisations techniques
+
+# 1. Module imports
+
+For this practical we first need to load any packages we will use.
+
+The `plot()` is part of the `base` package that is automatically loaded whenever you start `R`. The `graphics` package also has some plotting functions and it also is loaded automatically.
+
+
+```{r}
+# These lines are unnecessary
+# library(base)
+# library(graphics)
+```
+
+# 2. Importing, cleaning, and first visualisations
+
+The first steps in trying to extract insights out of data is to import it and clean it. 
+
+For this practical, we'll be using data on the finish times of athletes in various foot races from across the world.
+
+```{r}
+run_data_path <- "../data/run17.csv"
+run_df <- read.csv(run_data_path)
+head(run_df)
+```
+
+## Data exploration
+
+The first step is to get an intuitive understanding of what our datasets contains. Explore the data using the following functions:
+
+- `str()`
+- `summary()`
+- `unique(df$ColumnName)` for a given column named `ColumnName`
+
+```{r}
+# str() display the structure of the data frame
+str(run_df)
+```
+
+```{r}
+# Summary - check to see if any columns have missing values (NA's)
+summary(run_df)
+```
+
+```{r}
+# Unique City
+head( unique(run_df$city) )
+```
+
+```{r}
+# Unique values of other categorical variables
+unique(run_df$sex)  
+unique(run_df$event)
+```
+
+### Preparing a visualisation
+
+A good visualisation includes several elements:
+
+- Well labelled axes that includes units.
+- Clearly presented information 
+
+If you are ever unsure of how to use a method, `R`'s built-in help documentation is your friend. You can find the documentation for any function by running `help(FunctionName)`.
+
+NB: the `!` used below is the boolean NOT operator which inverts TRUE to FALSE and vice versa.
+
+### Getting an idea of the overall breakdown
+
+```{r}
+# Plot `net_sec` against `age` coloured by `sex`
+# Hint: use the plot() function from the previous practical
+
+long_run_df = run_df[run_df$event == "10 Mile",]
+mask = long_run_df$sex == "M"
+male_df = long_run_df[mask,]
+female_df = long_run_df[!mask,]
+
+plot(x = male_df$age, 
+     y = male_df$net_sec, 
+     col = rgb(red = 0, green = 0, blue = 1, alpha = 0.1),
+     pch = 20, # use filled circles as plot markers
+     main = "Race Finishing Times (10 miles)",
+     xlab = "Age (years)",
+     ylab = "Finish time (s)")
+points(x = female_df$age, 
+       y = female_df$net_sec, 
+       col = rgb(red = 1, green = 0, blue = 0, alpha = 0.1),
+       pch = 20)
+legend("bottomright", legend = c("Male", "Female"), pch = 20, col = c("blue", "red"))
+
+```
+
+# 3. Advanced visualisation
+
+`graphics` is another `R` package with specialised functions for particular plot types.
+
+The built-in `R` documentation lists the various plots available to use from this package.
+
+```{r}
+# Open the help page
+ help(package = "graphics")
+```
+
+## Distributional understanding
+
+Before doing statistical analysis, you need to understand the underlying data and how it is distributed.
+
+We'll use `hist()` to plot a histogram.
+
+```{r}
+hist(long_run_df$age, main = "Breakdown of Runner Age",
+     xlab = "Age (years)", ylab = "Count")
+```
+
+We can overlay different subsets of the data, conditioned on a particular variable, to reveal any relationships that might be present.
+
+```{r}
+sex_colours <- c(rgb(1, 0, 0, 0.5), rgb(0, 0, 1, 0.5)) # 20% transparent red and blue
+
+hist(female_df$age, col = sex_colours[1], 
+     main = "Breakdown of runner age conditioned by sex",
+     xlab = "Age (years)", ylab = "Count")
+hist(male_df$age, col = sex_colours[2], add = TRUE)
+legend("topright", legend = c("Female", "Male"), fill = sex_colours)
+```
+
+**Question:** What relationships can you see in the plot above? Is there anything worth investigating?
+
+### Scatterplot Matrix for Data exploration
+
+A common technique for exploring relationships is called a scatterplot matrix, which scatters each variable against another. We can also assign colours based on categorical attributes such as sex.
+
+The `plot()` function in `R` is "smart" in the sense that depending on what you give it as input, it will guess at what a good visualisation might be based on the types of variables. However, it is not always helpful.
+
+```{r}
+plot(long_run_df[c("bib", "sex", "age", "net_sec", "event")])
+```
+
+The `pairs()` function gives us more control over plotting a scatterplot matrix. Note that we can only pass it _numerical_ variables, not categorical ones, i.e., `age`, and `net_sec`. Strictly speaking the `bib` variable is categorical variable since it makes no sense to do arithmetic with athletes' bib numbers.
+
+```{r}
+pairs(long_run_df[c("bib", "age", "net_sec")],
+      main = "Scatterplot Matrix conditioned by sex",
+      col = sex_colours[factor(long_run_df$sex)],
+      pch = 16, cex = 0.5)
+```
+
+### Questions
+
+1. What trends can you see in the data above?
+
+2. Discuss what other visualisations might you make (using `plot()` or `hist()`) to explore relationships in the data? How might you condition or display the data beforehand?
+
+Make another two more plots based on your discussion, possibly creating a new, conditioned data frame to plot:
+
+```{r}
+# Visualisation 1
+hist(female_df$net_sec, col = sex_colours[1], 
+     main = "Breakdown of finish times conditioned by sex",
+     xlab = "Time (seconds)", ylab = "Count")
+hist(male_df$net_sec, col = sex_colours[2], add = TRUE)
+legend("topright", legend = c("Female", "Male"), fill = sex_colours)
+```
+
+```{r}
+# Visualisation 2
+
+dist_colours = c(rgb(1, 0, 1, 0.5), rgb(0, 1, 0, 0.5))
+
+male_10M_df <- subset(run_df, subset = event == "10 Mile" & sex == "M")
+male_5K_df <- subset(run_df, subset = event == "5K" & sex == "M")
+
+min_age <- min(run_df$age, na.rm = TRUE)
+max_age <- max(run_df$age, na.rm = TRUE)
+
+hist(male_10M_df$age,
+     freq = FALSE,
+     breaks = 20,
+     col = dist_colours[1], 
+     main = "Breakdown of mens ages conditioned by race length",
+     xlab = "Age (years)", ylab = "Density",
+     xlim = c(min_age, max_age))
+hist(male_5K_df$age, 
+     freq = FALSE,
+     breaks = 20,
+     col = dist_colours[2], add = TRUE)
+legend("topright", legend = c("10 Mile", "5K"), fill = dist_colours)
+```
+
+# 4. Belt wear
+
+Let's use the belt wear data from the lecture to explore what makes a good visualisation.
+
+- The thickness along an 1800 mm long drive-belt is measured at various points ("X") on installation.
+- The thickness at these points is then re-measured at several other dates and noted in "Result" as a measurement in millimetres.
+- This data is stored in a spreadsheet.
+
+```{r}
+belt_wear_df = read.csv("../data/belt.csv")
+head(belt_wear_df)
+```
+
+```{r}
+# Belt wear str(), summary(), etc.
+str(belt_wear_df)
+```
+
+```{r}
+summary(belt_wear_df)
+```
+
+```{r}
+unique(belt_wear_df$Test.Date)
+```
+
+```{r}
+# Convert dates to correct data type, a "Date-Time" object
+belt_wear_df$Test.Date <- as.POSIXct(belt_wear_df$Test.Date)
+
+first_test_date <- min(belt_wear_df$Test.Date)
+
+# Create a "relative test date" column
+belt_wear_df["Relative Test Date (days)"] <- difftime(belt_wear_df$Test.Date, first_test_date, units = "days") # out as to days
+
+head(belt_wear_df)
+```
+
+**Q:** What's wrong with the following plot?
+
+Run the below cell to produce a figure, and think about what may be wrong
+
+```{r}
+unique_dates <- unique(belt_wear_df$Test.Date)
+date_colours <- rainbow(length(unique_dates))
+
+plot(x = belt_wear_df$X, y = belt_wear_df$Result, 
+     col  = date_colours[factor(belt_wear_df$Test.Date)])
+```
+
+**Challenge:** Create a better plot using the elements of visualisations shown in the lecture:
+
+- Scale
+- Conditioning
+- Perception - Colour and length
+- Transformations
+- Context
+- Smoothing and other large data considerations Not all of these may be applicable
+
+Some hints and suggestions:
+
+- Make the plot bigger with `plt.figure(figsize=(x,y))` (you will need to create the figure before plotting, otherwise a second figure is made and the first is unchanged)
+- Create a "Relative Test Date (days)" column and colour by that, rather than an absolute date
+- Use a colour scale (such as 'viridis') for the test dates , not random colours. See [here](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html).
+- Connect the lines for a given date
+- Include a legend
+- Use x and y axes labels that are easier to understand
+  - What actually are "X" and "Result"?
+  - Include units!
+- Set the y-axes limits properly
+- Create a good title with the `main = ` argument to `plot()`.
+
+To do all of this, read the `plot()` documentation and specify the right arguments.
+
+Talk to your neighbours and see what they do!
+
+```{r}
+# Make your plot better in this cell!
+
+```
+
+# 5. Exploring complex relationships in Concrete data
+
+Let's switch back to use a reliability dataset that while a little less clear cut, may be more relevant.
+
+Let's do some exploratory data analysis to better understand it:
+
+- Understand data information.
+- Understand data distributions.
+- Understand any particularly clear relationships with a scatterplot matrix.
+- Improving visualisations
+
+```{r}
+conrete_path = "../data/concrete.csv"
+concrete_df = read.csv(conrete_path)
+head(concrete_df)
+```
+
+```{r}
+# Recall that there was an outlier that needs removing
+idx <- which(concrete_df$CompressiveStrength > 200)
+concrete_df <- concrete_df[-idx,]
+```
+
+```{r}
+# create a histogram of concrete age
+# hist() of "Age"
+
+# Ensure your axes are labelled and you have a title
+
+hist(concrete_df$Age, breaks = 20, 
+     probability = TRUE,
+     xlab = "Age", main = "Distribution of Concrete Age")
+```
+
+## Example analysis: does the amount of water play a role in compressive strength?
+
+1. Get an understanding of how your variables are distributed
+
+```{r}
+# hist() of "Water"
+# Ensure your axes are labeled and you have a title
+
+hist(concrete_df$Water, breaks = 20, 
+     probability = TRUE,
+     xlab = "Water", main = "Distribution of Concrete Water Content")
+```
+
+2. Come up with a way a way of conditioning data, e.g. resample water data into categorical bins. We can use `cut()` for this, by giving it break points based on the above plot.
+
+You could start by trying `breaks = c(120, 160, 200, 240)`.
+
+```{r}
+# Adding a new column called "water_bin"
+concrete_df$water_bin <- cut(concrete_df$Water, breaks = c(120, 160, 200, 240))
+
+# Summary counts of the new column we made
+summary(concrete_df$water_bin)
+```
+
+3. Visualise!
+
+```{r}
+dist_colours = c(rgb(1, 0, 0, 0.5), rgb(0, 1, 0, 0.5), rgb(0, 0, 1, 0.5))
+
+concrete_lowater_df <- subset(concrete_df, subset = water_bin == "(120,160]")
+concrete_midwater_df <- subset(concrete_df, subset = water_bin == "(160,200]")
+concrete_hiwater_df <- subset(concrete_df, subset = water_bin == "(200,240]")
+
+min_strength <- min(concrete_df$CompressiveStrength, na.rm = TRUE)
+max_strength <- max(concrete_df$CompressiveStrength, na.rm = TRUE)
+
+bin_breakpoints = seq(from = 0, to = max_strength + 10, by = 10)
+
+par(mfrow = c(3,1))
+
+hist(concrete_lowater_df$CompressiveStrength,
+     breaks = bin_breakpoints,
+     col = dist_colours[1], 
+     main = "Low Water Content",
+     xlim = c(min_strength, max_strength),
+     xlab = "Compressive Strength")
+hist(concrete_midwater_df$CompressiveStrength,
+     breaks = bin_breakpoints,
+     col = dist_colours[2],
+     main = "Mid Water Content",
+     xlim = c(min_strength, max_strength),
+     xlab = "Compressive Strength")
+hist(concrete_hiwater_df$CompressiveStrength,
+     breaks = bin_breakpoints,
+     col = dist_colours[3],
+     main = "High Water Content",
+     xlim = c(min_strength, max_strength),
+     xlab = "Compressive Strength")
+```
+
+**Q:** Did you gather any insights?
+
+**Q:** Would more bins make a difference?
+
+**Q:** Are there any other variables you might want to have a look into?
+
+
+## What next?
+
+After making observations of the data finding possible correlations, what do you do next?
+
+1. Form a Hypothesis
+2. Test with an experiment
+3. Analysis Data
+4. Report Conclusion
+5. Repeat...
+
+```{r}
+
+```
+
+# Bonus: Chemical Data
+
+Time permitting, perform similar analysis of the chemical data.
+
+```{r}
+# Import CSV from ../data directory and save as a variable
+# You will need to skip reading the first row of the CSV using `skip = 1`
+chemical_df <- read.csv("../data/chemicalmanufacturingprocess.csv", skip = 1)
+```
+
+```{r}
+# str(), summary(), head(), etc.
+str(chemical_df)
+```
+
+```{r}
+summary(chemical_df)
+```
+
+```{r}
+head(chemical_df)
+```
+
+Before going too far, note that there are 58 variables. Trying to correlate all these plots will results in $58 \times 58 = 3364$ plots! This image is roughly $14000 \times 14000$ pixels and might take your Quarto notebook some time to render and still be hard to read.
+
+Some general methods to deal with this:
+
+1. Make smart decisions about which factors to look at based on real world information and prior knowledge (can't do that here).
+2. Arbitrarily select some columns to process (better than not doing anything).
+3. Perform dimensionality reduction, e.g., Principal Component Analysis (PCA), and only analyse the principal components with the most variance.
+4. Contact your data science team...
+
+While we wont perform PCA here, for extra reading, see the [`LearnPCA`](https://cran.r-project.org/web/packages/LearnPCA/) package in `R`. 
+```{r}
+# Select some columns to look at
+chemical_subset_df <- chemical_df[c("Yield", "BiologicalMaterial01", "ManufacturingProcess45" )]
+head(chemical_subset_df)
+```
+
+```{r}
+# some basic plots of some single variables
+hist(chemical_subset_df$Yield,
+     breaks = 20,
+     xlab = "Yield", main = "Manufacturing Yield")
+```
+
+```{r}
+# Some multivariate analysis
+plot(chemical_subset_df)
+```
+
+```{r}
+
+```

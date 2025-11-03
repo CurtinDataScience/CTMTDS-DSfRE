@@ -1,0 +1,317 @@
+---
+title: "Lecture 4 Practical: Data Cleaning"
+format: html
+---
+
+# In this practical
+
+In this practical you will:
+
+1. Learn how to clean data.
+2. Search for outliers using automated methods.
+3. Merge tables both horizontally and vertically.
+4. Aggregate time series data into new frequencies.
+
+# Setup
+
+```{r}
+library(arrow)
+
+concrete <- read.csv("../data/concrete.csv")
+chemical <- read.csv("../data/chemicalmanufacturingprocess.csv", skip = 1)
+backblaze <- read_parquet("../data/backblaze.parquet")
+```
+
+# 1. Identifying Outliers
+
+## 1.1 Concrete outliers
+
+We will start by creating a **box plot** of the `CompressiveStrength` variable in the `concrete` data frame to explore the distribution of its values.
+
+A box plot provides a visual guide to the distribution and skew of a data set:
+
+- The lower and upper edges of the box indicate the 1st and 3rd **quartiles** of the data.
+- The central line indicates the **median** (2nd quartile).
+- The "whiskers" are located at 1.5 times the **interquartile range** (IQR) above and below the median.
+- Points more than 1.5 times the IQR from the median are drawn as individual points.
+
+```{r}
+boxplot(concrete$CompressiveStrength, 
+        horizontal = TRUE, 
+        xlab = "Compressive Strength")
+```
+
+**Observation:** It is clear that there is one outlier value indicating compressive strength far stronger than the general population.
+
+After discussions with the engineers who gathered this data, it turns out that this value is incorrect.
+
+We need to remove this data point, and we'll demonstrate two approaches for doing so:
+
+1. Manually identify and remove the outlier.
+2. Automatically identity and remove it using the interquartile range.
+
+## 1.1 Manually remove the outlier
+
+Firstly, we need to identify which row contains the outlier. We can use the `which()` function with an appropriate boolean expression to identify the row index of the outlier.
+
+```{r}
+# idx <- concrete$...> ... 
+(idx <- which(concrete$CompressiveStrength > 200))
+```
+
+Then we can use the square bracket notation (`[]`) with a *negated* index to remove the row:
+
+```{r}
+concrete[-idx,]
+```
+
+**Note:** this returns a new data frame with the row removed; it will not alter the original data frame unless you assign the output back to the original data frame.
+
+- e.g., `concrete <- concrete[-idx,]`
+
+## 1.2 Automated removal
+
+Manually eyeballing outliers is not practical on a large dataset. A better way to do this is to identify outliers in an automated fashion.
+
+Let's use three times the interquartile range as a reasonable bound on our data and drop values that lie outside this range.
+
+First, let's calculate the median and interquartile range using `quantile()`:
+
+```{r}
+quartiles <- quantile(concrete$CompressiveStrength, probs = c(0.25, 0.5, 0.75))
+
+# iqr <- ...
+(iqr <- quartiles[3] - quartiles[1])
+```
+
+There is also the function `IQR()` which calculates the IQR of a vector of values.
+
+Using these quartiles, we can use square bracket notation `[]` to filter the data frame down to those rows with a `CompressiveStength` within 3 IQRs of the median:
+
+```{r}
+# concretefilter <- concrete[(concrete$CompressiveStrength > quartiles[2] - 3*iqr) & (...),]
+
+concretefiltered <- 
+  concrete[(concrete$CompressiveStrength > quartiles[2] - 3*iqr) 
+           & (concrete$CompressiveStrength < quartiles[2] + 3*iqr),]
+```
+
+Finally, let's visualise our dataset again using a box plot to confirm the results of our outlier removal:
+
+```{r}
+boxplot(concretefiltered$CompressiveStrength, 
+        horizontal = TRUE, 
+        xlab = "Compressive Strength")
+```
+
+## 1.3 Chemical Manufacturing Process
+
+The data stored in the `chemical` data frame also has some outliers associated with its `Yield` column. In this exercise:
+
+1. Make a box plot of the `Yield`.
+
+```{r}
+boxplot(chemical$Yield,
+        horizontal = TRUE, 
+        xlab = "Yield")
+```
+
+2. Manually identify the outliers and use `[,]` with negated indices to remove these from the data.
+
+```{r}
+outlier_indices <- which(chemical$Yield > 45) # visually identified from the boxplot above
+chemical_cleaned <- chemical[-outlier_indices,]
+
+boxplot(chemical_cleaned$Yield,
+        horizontal = TRUE, 
+        xlab = "Yield")
+```
+
+3. Use the interquartile range to automate the removal of these outliers.
+
+```{r}
+# Clean your data here
+
+quartiles <- quantile(chemical$Yield, probs = c(0.25, 0.5, 0.75))
+iqr <- quartiles[3] - quartiles[1]
+
+chemical_filtered <- 
+  chemical[(chemical$Yield > quartiles[2] - 3*iqr) 
+           & (chemical$Yield < quartiles[2] + 3*iqr),]
+
+boxplot(chemical_filtered$Yield,
+        horizontal = TRUE, 
+        xlab = "Yield")
+```
+
+# 2. Merging tables
+
+## 2.1 Vertical concatenation
+
+You receive a new set of concrete data located at `../data/concrete-2.csv`.
+
+**Aim:** combine this table with the original concrete data.
+
+First, load the new data as a data frame:
+
+```{r}
+# concrete2 <- read.csv("...")
+# concrete2
+concrete2 <- read.csv("../data/concrete-2.csv")
+```
+
+Since these two tables have identical columns, you can stack or "bind" them using the `rbind()` function, e.g., `rbind(df1, df2, ...)`
+
+Combine `concrete` and `concrete2` using this function:
+
+```{r}
+# rbind(...)
+rbind(concrete, concrete2)
+```
+
+**Question:** What is the shape of the combined table?
+
+## 2.2 Horizontal merging
+
+First let's note the different models of drive that we have in our data using `unique()`:
+
+```{r}
+unique(backblaze$model)
+```
+
+Let's load the data about each of these models from the CSV located at `../data/backblaze-models.csv`:
+
+```{r}
+# models <- read.csv(...)
+models <- read.csv("../data/backblaze-models.csv")
+models
+```
+
+We want to merge these tables: for every row in the original `backblaze` data frame, we want to include this additional data about the drive.
+
+We do this using the `merge()` function:
+
+- Specify both tables to be merged, `x` and `y`.
+- Using the arguments `by.x =` and `by.y = `, specify the column from each table that will be used to match the rows.
+
+```{r}
+# merge(x = ..., y = ..., by.x = "...", by.y = "...")
+merge(x = backblaze, y = models, by.x = "model", by.y = "model")
+```
+
+Suppose we're only interested in the operating power from the `models` data frame.
+
+Try merging _only_ the `operating_power` column.
+
+(**Hint:** remember we can select a subset of columns with the syntax `df[c("col1", "col2")]`)
+
+```{r}
+# merge(x = ..., y = ..., by.x = "...", by.y = "...")
+merge(x = backblaze, 
+      y = models[c("model", "operating_power")], 
+      by.x = "model", 
+      by.y = "model")
+```
+
+# 3. Aggregating
+
+For this section we return to the Backblaze data.
+
+Each row in this table represents a daily "health check" for every hard drive in operation. Eventually, when a drive fails its final daily health check will set `failure = 1`. That is, every entry where `failure = 1` represents a drive failing.
+
+**Our goal:** track the number of drives failing over time.
+
+## 3.1 Daily failures
+
+Let's say we want to count the number of drive failures on a daily basis. To do this we can use the `aggregate()` function to tally up all the failures that occur on the same day as a row in a new table.
+
+This function can take a vector that contains the _values_ that we want to aggregate, a vector of labels that specifies how each value is _grouped_, and the name of the _function_ to apply to each group of values.
+
+For example, we want to:
+
+1. Aggregate values in the `failure` column of the `backblaze` data frame.
+
+2. Group these values by their `date`.
+
+3. Calculate the `sum()` of these `failure` values to get the total failures on each day.
+
+**Note:** we use the `as.Date()` function to remove the hours/minutes/seconds/timezone information from the `date` values.
+
+```{r}
+grouping <- as.Date(backblaze$date)
+daily <- aggregate(x = backblaze$failure, by = list(Date = grouping), FUN = sum)
+daily
+```
+
+The `aggregate()` function can also use `R`'s alternative "formula" syntax:
+
+```{r}
+daily_alt <- aggregate(failure ~ date, FUN = "sum", data = backblaze)
+daily_alt
+```
+
+We can now plot these failures over time using `plot()`:
+
+```{r}
+plot(daily, type = "h", main = "Daily hard drive failures", ylab = "No. failures")
+```
+
+## 3.2 Monthly failures
+
+The daily failures data is very "noisy". There's too much variation on a day-to-day basis.
+
+Your goal is to:
+
+1. Aggregate the data to a **monthly** basis and calculate the total drive failures across this period.
+2. Create a new plot showing the monthly failure incidence.
+
+**Hint:** You can use the `cut()` method to bin values (such as dates) into coarser increments, e.g, `cut(backblaze$date, "months")`. Note however you need to turn the output of `cut()` (which are factors) into dates using `as.Date()`.
+
+```{r}
+# grouping <- as.Date(cut(backblaze$date, "months"))
+# monthly <- aggregate(...)
+# plot(monthly, ...)
+
+grouping <- as.Date(cut(backblaze$date, "months"))
+monthly <- aggregate(x = backblaze$failure, by = list(Date = grouping), FUN = sum)
+
+plot(monthly, 
+     type = "h", 
+     main = "Monthly hard drive failures", 
+     ylab = "No. failures")
+```
+
+# 4. Advanced
+
+Plot the sum of the operating power for each failed drive over a 7 day period.
+
+You will need to:
+
+1. Merge the `operating_power` column from `models`.
+2. Filter rows to include `failure=1` only.
+3. Aggregate the data to a "7 day" period.
+4. Sum the `operating_power` and plot the resulting values.
+
+(**Hint:** look at the help for `aggregate()` to see how its `subset = ` argument can be used to filter out rows.)
+
+```{r}
+# ...
+
+backblaze_oppower <- merge(x = backblaze, 
+                           y = models[c("model", "operating_power")], 
+                           by.x = "model", 
+                           by.y = "model")
+
+grouping <- as.Date(cut(backblaze_oppower$date, "7 day"))
+seven_daily <- aggregate(x = backblaze_oppower$operating_power, 
+                         by = list(Date = grouping), 
+                         subset = backblaze_oppower$failure == 1,
+                         FUN = "sum")
+
+plot(seven_daily,
+     type = "h", 
+     main = "7-day failed hard drive operating power", 
+     ylab = "Power")
+```
+
+
