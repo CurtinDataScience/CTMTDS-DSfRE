@@ -1,0 +1,406 @@
+---
+title: "Lecture 3 Practical: Extracting and importing data"
+subtitle: "Solutions"
+format: html
+---
+
+# In this Practical
+
+In this Practical you will:
+
+1. Import data from both CSV and Parquet files
+2. Explore data frame objects
+3. Export data to various formats
+
+# 0. Before we begin
+
+First we'll need to install the packages that we'll be using today. Run the code chunk below by clicking on the green play button in its top right corner. Alternatively, with the cursor inside the chunk, press <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Enter</kbd>, to run all the code in that chunk.
+
+```{r eval=FALSE}
+Sys.setenv(ARROW_WITH_BROTLI = "ON") # needed for the data file in this prac.
+install.packages("arrow") # this may take a few minutes.
+```
+
+# 1. Module imports
+
+The first step in using any `R` package is to load it.
+
+Here we import `arrow` using the `library()` function.
+
+```{r}
+library(arrow)
+```
+
+# 2. Importing data
+
+There are three files that we will import and explore. They are:
+
+- **concrete.csv**
+
+This table contains a range of recipes for concrete – including cement, water, aggregate, and age; and the resulting compressive strength. Compressive strength is the "response variable", and the recipe amounts are the "explanatory variables".
+
+- **chemicalmanufacturing.csv**
+
+This table contains the yield (the response variable) and the corresponding values of a large number of manufacturing inputs and processes (the explanatory variables).
+
+- **backblaze.parquet**
+
+This is public time series data for computer hard drives used by a large cloud provider. For each hard drive, we have its serial number as well as its failure status.
+
+We will import these data files using their relative file path. Relative to this notebook (`.QMD`) file, they are located up one folder (`..`) and in the `data` directory. Their paths are:
+
+- `../data/concrete.csv`
+- `../data/chemicalmanufacturing.csv`
+- `../data/backblaze.parquet`
+
+## 2.1 Import
+
+Import each of the above files by choosing between the following functions:
+
+- `read.csv()` ([documentation](https://cran.r-project.org/doc/manuals/r-release/R-data.html#index-read_002ecsv))
+- `read_parquet() ` ([documenation](https://arrow.apache.org/docs/r/reference/read_parquet.html))
+
+```{r}
+# Import the concrete CSV file
+
+# Set the path to the location of concrete.csv
+concrete <- read.csv("../data/concrete.csv")
+```
+
+```{r}
+# Import chemical data
+# HINT: you might need to use the skip= argument to fix any errors
+chemical <- read.csv("../data/chemicalmanufacturingprocess.csv", skip = 1)
+```
+
+```{r}
+backblaze <- read_parquet("../data/backblaze.parquet")
+```
+
+## 2.2 Display the table
+
+To preview the table you have a couple of options:
+
+- Use the `head()` function to print to screen the first few rows (6 by default).
+- Type out the name of the object in a code chunk and RStudio will automatically displays its content when the chunk is executed.
+
+```{r}
+# Preview each of the data frames using head()
+head(concrete)
+```
+
+```{r}
+# Preview the backblaze data frame by just typing its name in this chunk
+
+# Uncomment this line:
+backblaze
+```
+
+# 3. Exploring the DataFrame
+
+The following functions are useful for exploring your imported data frame:
+
+- `names()` to get the names of each column.
+- `nrow()` to get the number of rows.
+- `dim()` to get the (row, columns) as a 2-element vector.
+- `str()` to compactly display the structure.
+- `summary()` to generate an automatic statistical summary of each column.
+
+```{r}
+# How many rows does each data frame have? Which is the largest?
+nrow(concrete)
+
+# ...chemical...
+nrow(chemical)
+
+# ...backblaze...
+nrow(backblaze)
+```
+
+```{r}
+# What are the names of the columns?
+names(concrete)
+
+# ...chemical...
+names(chemical)
+
+# ...backblaze...
+names(backblaze)
+```
+
+```{r}
+# How many rows and columns does our table have? What are their data types?
+# Explore the metadata about this table using the str() function
+str(concrete)
+
+# ...chemical...
+str(chemical)
+
+# ...backblaze...
+str(backblaze)
+```
+
+```{r}
+# Use the summary() method on concrete to get a statistical summary of each column
+
+# ...concrete...
+summary(concrete)
+```
+
+# 4. Selecting columns
+
+There are multiple ways to select columns from your data frame including:
+
+- `df["ColumnName"]` to get a column as a new single-column data frame.
+- `df$ColumnName` to get a column as a vector.
+
+```{r}
+# Select the Age column from concrete using each of these methods
+
+# concrete...
+concrete$Age
+
+concrete["Age"]
+```
+
+Multiple columns can be selected at once by using a vector of column names. This returns a new data frame that is a subset of the original:
+
+- `df[c("ColumnName1", "ColumnName2")]`
+
+For example, to select both the Age and Cement columns we would use: `concrete[c("Age", "Cement")]`
+
+Note the use of the `c()` function to create the vector of column names.
+
+```{r}
+# Select both the Age, Cement and Water columns from the concrete data frame
+
+# concrete...
+concrete[c("Age", "Cement", "Water")]
+```
+
+It is possible to perform calculations over a whole vector of values.
+
+Arithmetic functions that operate on a vector and return a single value include:
+
+- `sum()`
+- `min()` and `max()`
+- `mean()` and `median()`
+
+There are also functions that will return a vector of values:
+
+- `unique()` will return every unique value in a vector without duplicates.
+- `quantile()` will return a value for every quantile specified.
+
+Recall that we get a column of a data frame using the `$` operator, e.g., `df$ColumnName`.
+
+```{r}
+# What is the mean and median compressive strength of all of the concrete recipes?
+mean(concrete$CompressiveStrength)
+
+# median: concrete$...
+median(concrete$CompressiveStrength)
+```
+
+```{r}
+# What are the unique age values in the Age column?
+unique(concrete$Age)
+```
+
+```{r}
+# What are the 25 and 75th quantiles of concrete age?
+quantile(concrete$Age, probs = c(0.25, 0.75))
+```
+
+```{r}
+# What is the 25th and 75th quantile of the concrete Compressive Strength?
+
+# concrete...
+quantile(concrete$CompressiveStrength, probs = c(0.25, 0.75))
+```
+
+# 5. Indexing into data frames
+
+## 5.1 Accessing rows
+
+You can select particular rows of a data frame by specifying ranges of numerical indices inside square bracket notation (`df[row_indices,]`). Having no indices after the comma indicates that we want all the columns. Vice versa, leaving it empty before the comma indicates all the rows (`df[,column_indices]`).
+
+Note that indices are integers starting from 1.
+
+- e.g. `concrete[50,]` for all columns of the 50 row, or `concrete[30:70,]` for all columns from rows 30 to 70.
+
+```{r}
+# Print row 50
+concrete[50,]
+```
+
+```{r}
+# Print rows 100-150
+concrete[50:150,]
+```
+
+## 5.2 Accessing cells
+
+Individual cells are accessed by specifying in square brackets the row index and  the column index separated by a comma. Alternatively, a column name may be used instead of its numerical index.
+
+- `concrete[50, 7]`
+- `concrete[50, "Age"]`
+
+```{r}
+# Get the value from the 47th row of the Age column using both methods
+
+# concrete...
+concrete[47,]
+```
+
+We can get slices of rows and columns:
+
+```{r}
+# Print a subset: rows 50-70 of two named columns
+concrete[50:70, c("Cement", "FlyAsh")]
+
+# Or the same thing but with a different style: which do you prefer?
+concrete[c("Cement", "FlyAsh")][50:70,]
+```
+
+5.3 Modifying a data frame
+
+We can modify both individual cells as well as bulk slices of a data frame in a single command, e.g.
+
+- Update a single cell: `concrete[50, "Age"] <- 100`
+- Bulk update a slice: `concrete[50:70, "Age"] <- concrete[50:70, "Age"] + 100`
+
+```{r}
+# Add 2 units of time to the Age of each row
+
+# concrete..
+concrete_modified <- concrete # make a copy of the data frame first
+concrete_modified[, "Age"] <- concrete_modified[, "Age"] + 2
+concrete_modified
+```
+
+# 6. Filtering the data frame
+
+Filter down to a subset of rows by using the `subset()` function. You must provide an expression that evaluates to TRUE for the rows that you want.
+
+You can also specify a subset of columns to return using the `select =` argument.
+
+- e.g. `subset(concrete, subset = (Water > 150) & (Cement > 400), select = c(Cement, Water, FlyAsh))`
+
+```{r}
+subset(concrete, (Water > 150) & (Cement > 400) & (Cement < 500))
+```
+
+```{r}
+subset(concrete, subset = (Water > 150) & (Cement > 400), select = c(Age, Cement, Water))
+```
+
+The `colMeans()` function can be used to find the mean of each (numeric) column in a data frame.
+
+```{r}
+# Compare the mean CompressiveStrength for mixtures with an Age both less and greater than 30
+
+# Less than 30
+meanless30 <- colMeans(  
+  subset(concrete, subset = Age < 30, select = CompressiveStrength)
+)
+
+# Versus greater than 30...
+meanplus30 <- colMeans(
+  subset(concrete, subset = Age > 30, select = CompressiveStrength)
+)
+
+# Which is stronger?
+meanless30
+meanplus30
+```
+
+We can also use square bracket notation to create a "mask", e.g.:
+
+```{r}
+mask <- concrete["Water"] > 150 & concrete["Water"] < 500
+concrete[mask,]
+```
+
+Use this method to filter the `chemical` data frame and show only those rows where `ManufacturingProcess38` is 2:
+
+```{r}
+mask <- chemical$ManufacturingProcess38 == 2
+chemical[mask,]
+
+mask <- chemical["ManufacturingProcess38"] == 2
+chemical[mask,]
+```
+
+```{r}
+# For the ChemicalProcess table, find the mean Yield for each value of ManufacturingProcess38 (values: 0, 2, 3)
+# Does this process seem to make a big difference to the yield?
+
+yield0 <- colMeans(subset(chemical, subset = ManufacturingProcess38 == 0, select = Yield))
+yield2 <- colMeans(subset(chemical, subset = ManufacturingProcess38 == 2, select = Yield))
+yield3 <- colMeans(subset(chemical, subset = ManufacturingProcess38 == 3, select = Yield))
+
+yield0
+yield2
+yield3
+```
+
+# 7. Advanced: Data frame row names
+
+Take a look again at the `backblaze` data set:
+
+```{r}
+head(backblaze)
+```
+
+Each row in a data frame has a unique and somewhat hidden "row name" which by default is not shown in the output of a code chunk. If you display a data frame by typing its name into the Console you'll see a column of numbers down the left-hand margin.
+
+```
+> backblaze
+  serial_number       model                date     event
+1        Z30051R6 ST4000DM000 2013-05-10 08:00:00 installed
+2        Z3005Z1F ST4000DM000 2013-05-10 08:00:00 installed
+3        Z3005HDX ST4000DM000 2013-05-10 08:00:00 installed
+```
+
+We can show these "row names" in chunk outputs by inserting `rownames.print=TRUE` into the preamble of the code chunk that's found in the curly braces.
+
+```{r rownames.print=TRUE}
+head(backblaze)
+```
+
+By default, these row names are simply the row number (starting from 1).
+
+These row names can be used to filter the rows of a data frame like any other column, and accessed using the `row.names()` function.
+
+```{r}
+# Get all the rows with names between 100 and 110 inclusive
+backblaze[rownames(backblaze) %in% 100:110,]
+```
+
+The `%in%` operator returns `TRUE` if the value mentioned before it is found in the range specified after it.
+
+One important property is that even if rows are filtered out or dropped from a data frame, the original row name is not changed.
+
+However, in practice, it is recommended to filter rows by their row index directly or by the values in the other columns. Alternatively, create a new column which is the row name and filter according to that.
+
+```{r}
+backblaze$row_number <- row.names(backblaze)
+backblaze
+```
+
+We can also use the `row.names()` function to set the values of the row names:
+
+```{r}
+# Set the new row names to be the old row name prefixed with an R
+row.names(backblaze) <- paste0("R", row.names(backblaze))
+head(backblaze)
+```
+
+Row names can be reset to the row number by `row.names(df) <- NULL`.
+
+```{r}
+row.names(backblaze) <- NULL
+head(backblaze)
+```
+
+Note that row names must be **unique**; duplicated or missing row names are not permitted.
