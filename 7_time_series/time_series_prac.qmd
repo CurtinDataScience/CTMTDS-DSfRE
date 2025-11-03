@@ -1,0 +1,101 @@
+---
+title: "Practical 7: Time Series Analysis"
+format: html
+---
+
+## In this Practical
+
+In this practical you will:
+
+1. Execute code chunks to fit a complex SARIMA model to CO2 data.
+
+# Step 1: Load and Inspect the CO2 Data
+
+This step loads the monthly atmospheric CO2 data from the `datasets` package that comes with `R`. We will use functions from the `forecast` package.
+
+```{r}
+# Install the package if needed
+# install.packages("forecast")
+```
+
+```{r}
+library(forecast)
+
+# Load co2 dataset from the `datasets` package
+data(co2)
+str(co2)
+```
+
+# Step 2: Visualize the Raw CO2 Data
+
+Plot the full CO2 time series to explore patterns, trends, and any noticeable anomalies.
+
+```{r}
+plot(co2, main = "Atmospheric CO2 Concentration Over Time",
+        ylab = "CO2 (ppm)")
+```
+
+# Step 3: Add a Moving Average Trend Smoother
+
+Overlay a 12-month moving average on the raw CO2 data to better visualize the long-term trend.
+
+```{r}
+moving_average_12mo <- ma(co2, order = 12)
+
+plot(co2, main = "CO2 Trend Over Time", ylab = "CO2 (ppm)")
+lines(moving_average_12mo, col = "blue", lwd = 4)
+legend("topleft", legend = c("CO2", "12mo average"), fill = c("black", "blue"))
+```
+
+# Step 4: Decompose the Time Series
+
+Use seasonal decomposition to break the CO2 series into trend, seasonal, and residual components. This helps assess both trend and periodicity.
+
+```{r}
+# Seasonal decomposition
+decomposition <- stl(co2, s.window = 12)
+plot(decomposition)
+```
+
+# Step 5: Plot the ACF and PACF
+
+Generate the autocorrelation function (ACF) and partial autocorrelation function (PACF) plots to help identify suitable parameters for the ARIMA model.
+
+```{r}
+# Use differenced series for ACF/PACF
+diff_co2 <- diff(co2)
+
+Acf(diff_co2, lag.max = 48, main = "ACF of differenced C02")
+```
+
+```{r}
+Pacf(diff_co2, lag.max = 48, main = "PACF of differenced C02")
+```
+
+# Step 6: Fit a seasonal ARIMA model to the data
+
+```{r}
+# Fit SARIMA model 
+sarima_model <- Arima(co2, order = c(1,1,1), seasonal = c(1,1,2))
+sarima_model
+```
+
+# Step 7: Forecast the Next Ten Years
+
+Use the SARIMA model to forecast CO2 levels for the next 120 months, showing a 90% prediction interval.
+
+```{r}
+# Forecast 48 months into the future
+forecast_48mo <- forecast(sarima_model, h = 120, level = 90)
+```
+
+```{r}
+# Plot forecast
+plot(forecast_48mo, fcol = "red", shadecols = "darkgrey",
+     main = "Forecast of CO2 for Next 10 Years")
+legend("topleft", legend = c("Original", "Forecast", "90% Prediction Interval"),
+       fill = c("black", "red", "darkgrey"))
+```
+
+
+
