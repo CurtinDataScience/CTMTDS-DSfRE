@@ -1,0 +1,91 @@
+---
+title: "Practical 8: Logistic Regression"
+format: html
+---
+
+# In this Practical
+
+In this practical you will:
+
+1. Execute code chunks to fit a logistic regression model to the financial default data.
+
+# 1. Import the dataset
+
+```{r}
+library(caret)
+library(pROC)
+
+# Load the dataset
+default_df <- read.csv("data/Default.csv")
+
+# Display the first few rows
+head(default_df)
+```
+
+# 2. Exploratory Data Analysis (EDA)
+
+We examine the relationship between `balance`, `income`, `student` status, and `default`.
+
+```{r}
+# Convert categorical variables to proper types
+default_df$default <- as.factor(default_df$default)
+default_df$student <- as.factor(default_df$student)
+```
+
+```{r}
+# Plot 1: Balance vs Income, faceted by student, coloured by default
+
+xyplot(balance ~ income | student, groups = default, data = default_df)
+```
+
+```{r}
+# Plot 2: Balance vs Income, faceted by default, colored by student
+
+xyplot(balance ~ income | default, groups = student, data = default_df)
+```
+
+# 3. Split the data into training and test sets (stratified by default)
+
+```{r}
+set.seed(0)
+
+training_index <- createDataPartition(default_df$default, p = 0.8, list = FALSE)
+
+training_set <- default_df[training_index, ]
+testing_set <- default_df[-training_index, ]
+```
+
+# 4. Fit a logistic regression model
+
+We use `student` and `balance` as predictors for `default`.
+
+```{r}
+default_glm <- glm(default ~ student + balance, data = training_set,
+                   family = binomial(link = "logit"))
+summary(default_glm)
+```
+
+# 5. Assess model fit on test set
+
+We produce a normalized confusion matrix and ROC curve.
+
+```{r}
+# Predict probabilities and labels
+predicted_probs <- predict(default_glm, newdata = testing_set, type = "response")
+predicted_label <- factor(ifelse(predicted_probs >= 0.5, "Yes", "No"))
+actual_label <- testing_set$default
+```
+
+```{r}
+# Confusion matrix
+confusionMatrix(predicted_label, actual_label, mode = "everything")
+```
+
+```{r}
+# ROC curve
+roc_curve <- roc(actual_label ~ predicted_probs)
+
+plot(roc_curve, print.auc = TRUE, print.thres = TRUE, 
+     main = "ROC Curve for Default predictions")
+```
+

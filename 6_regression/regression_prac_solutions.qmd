@@ -1,0 +1,335 @@
+---
+title: "Practical 6: Regression"
+subtitle: "Solutions"
+format: html
+---
+
+In this workshop you will:
+
+- Perform linear regression on existing linear data.
+- Analyse residuals and determine goodness of fit.
+- Transform non-linear data into linear.
+- Make predictions based on these models.
+
+# 1. Getting started
+
+```{r}
+concrete_df <- read.csv("../data/concrete.csv")
+concrete_df <- subset(concrete_df, subset = CompressiveStrength < 100) # Filter the outlier
+```
+
+# 2. Concrete: simple linear regression
+
+As a first exercise, let's fit a model  o see if `CompressiveStrength` of concrete can be modelled linearly based on `Cement` content.
+
+First begin by plotting `CompressiveStrength` as a function of `Cement`. On a first pass, does the relationship look approximately linear?
+
+Here we introduce the "formula" notation used in `R`. On the left of the tilde "~" is the outcome or response variable that gets plotted on the vertical (y) axis, and the explanatory or predictor variables are on the right-hand side and get plotted on the horizontal (x) axis.
+
+The variable names are the names of the columns in the data frame. We also need to specify the name of the data frame object in the `data =` argument. 
+
+Using this notation avoids having to use the `$` operator everywhere to access particular data frame columns and should make your code easier to read.
+
+```{r}
+plot(CompressiveStrength ~ Cement, data = concrete_df)
+```
+
+## 2.1 Building the model
+
+Now using the formula notation, lets model this degradation using an Ordinary Least Squares model. This process looks like:
+
+`my_model <- lm(y ~ x, data = dataframe_name)`
+
+You will need to replace the data and the names of response and explanatory variables with `CompressiveStrength` and `Cement`, respectively.
+
+```{r}
+# model1 <- lm(... ~ ..., data = ...)
+model1 <- lm(CompressiveStrength ~ Cement, data = concrete_df)
+model1
+```
+
+The regression object (`model1`) contains a number of useful properties and methods:
+
+- `model1$coefficients` is a named vector of coefficients: intercept and slope
+- `model1$residuals` is a vector of residuals, i.e., $y - \hat{y}$
+- `summary(model1)` returns a summary of the fit, its parameters and the goodness of fit tests
+- `model1$fitted.values` returns the model's predicted values at each of the original values of the explanatory variables, `Cement`.
+
+```{r}
+# Experiment with some of these values
+summary(model1)
+```
+
+```{r}
+# Histogram of the residuals
+hist(model1$residuals, main = "Histogram of Residuals", xlab = "Residual")
+```
+
+
+
+## 2.2 Assessing goodness of fit
+
+Let's explore some of these to determine whether our model fits the data well.
+
+First, let's assess the model using its summary field. Does the $R^2$ (R-squared) value indicate a good fit?
+
+```{r}
+summary(model1)$r.squared
+```
+
+Next let's plot our model:
+
+1. Compare model with the underlying values.
+2. Compare the variance of residuals.
+3. Plot the quantile-quantile plot (QQ-plot) of the residuals to determine if they are normally distributed.
+
+```{r}
+# Overlay the fitted values over the original data
+plot(CompressiveStrength ~ Cement, data = concrete_df,
+     main = "Fitted vs Original",
+     xlab = "Cement Content", ylab = "Strength")
+points(x = concrete_df$Cement, y = model1$fitted.values, col = "red")
+```
+
+```{r}
+# Alternatively we can use the fitted intercept/slope and `abline()`
+plot(CompressiveStrength ~ Cement, data = concrete_df,
+     main = "Regression Line",
+     xlab = "Cement Content", ylab = "Strength")
+abline(a = model1$coefficients[1], b = model1$coefficients[2], 
+       col = "blue", lwd = 2)
+```
+
+```{r}
+# Check that the residuals have similar variance across all x values
+plot(x = concrete_df$Cement, y = model1$residuals, col = "brown",
+     main = "Residuals", xlab = "Cement Content", ylab = "Residual")
+```
+
+```{r}
+# Check the quantiles of the residuals match those of a normal distribution
+qqnorm(model1$residuals)
+qqline(model1$residuals, col = "magenta", lwd = 2)
+```
+
+**Shortcut:** Since examining residuals are a standard diagnostic, we can generate all the necessary plots with just one call of the `plot()` function:
+
+```{r}
+plot(model1)
+```
+
+Does the model seem reasonable? Remember to ask yourself:
+
+1. Are the residuals normally distributed about the regression line?
+2. Is this residual variation constant with respect to the explantory variable?
+3. Does the original data appear linear?
+4. Are the observations independent?
+
+# 3. Concrete: multiple linear regression
+
+The previous model regressed the response variable on a single explanatory variable `Cement`.
+
+What if we try a more complex model based on all of the variables?
+
+## 3.1 Building the model
+
+Consider just three explanatory variables: `a`, `b`, and `c`. Let's build a model that includes:
+
+- Each variable
+- Each paired combination of variables ("interaction terms")
+
+Or more explicitly: `y ~ a + b + c + a:b + b:c + a:c`
+
+In `R` we can use the shorthand `y ~ (a + b + c)^2`.
+
+**Your task:** fit a multiple linear regression model using all of the variables in the `concrete_df` data frame, including all the pairwise interaction terms.
+
+```{r}
+model2 <- lm(CompressiveStrength ~ BlastFurnaceSlag, data = concrete_df)
+
+plot(formula(model2), data = concrete_df)
+abline(a = model2$coefficients[1], b = model2$coefficients[2], 
+       col = "blue", lwd = 2)
+```
+
+```{r}
+model3 <- lm(CompressiveStrength ~ Water, data = concrete_df)
+
+plot(formula(model3), data = concrete_df)
+abline(a = model3$coefficients[1], b = model3$coefficients[2], 
+       col = "blue", lwd = 2)
+```
+
+```{r}
+model4 <- lm(CompressiveStrength ~ FineAggregate, data = concrete_df)
+
+plot(formula(model4), data = concrete_df)
+abline(a = model4$coefficients[1], b = model4$coefficients[2], 
+       col = "blue", lwd = 2)
+```
+
+```{r}
+# Coupled fit! use "y ~ (a + b + c)^2", but replace y, a, b, c, with the variables in our data frame
+
+model5 <- lm(CompressiveStrength ~ (Cement + BlastFurnaceSlag + FlyAsh + Water + Superplasticizer + CoarseAggregate + FineAggregate + Age)^2, data = concrete_df)
+```
+
+## 3.2 Assessing the goodness of fit
+
+Now have a look at the output of `summary(model5)`.
+
+- What does this tell you about the model?
+- Are there variables whose coefficients are not strong predictors of the `CompressiveStrength`?
+
+```{r}
+summary(model5)
+```
+
+It is not easy to plot the fitted results since there are 8 explanatory variables but we can plot the residuals as well as the QQ-plot to check for deviations from a normal distribution.
+
+```{r}
+plot(model5)
+```
+
+Those residuals are quite large (~20) compared to the underlying values of the `CompressiveStrength`.
+
+Plot the actual value as a fraction of the predicted value using a box plot. Do you think the model has good predictive power?
+
+```{r}
+# boxplot(...)
+boxplot(concrete_df$CompressiveStrength/model5$fitted.values,
+        horizontal = TRUE,
+        main = "Ratio of original to fitted values")
+```
+
+# 4. Transformations
+
+Often the relationship between the response and the explanatory variables is not linear and requires some transformation to make it so. In this final section we consider how to construct models from data that has been linearised using a transformation.
+
+## 4.1 The model: ore fraction based on light absorbance
+
+Consider the following dataset that measures:
+
+- Ore fraction: the percentage of a particular mineral ore in particular sample.
+- Absorbance: the absorbance of light at a particular wavelength [arbitrary units].
+
+**Our goal:** use a regression model to predict the amount of ore in a sample based on its absorbance.
+
+```{r}
+ore_df <- read.csv("../data/ore.csv")
+ore_df <- ore_df[order(ore_df$Absorbance),] # sorts rows in ascending `Amount`
+str(ore_df)
+```
+
+First, plot the ore fraction (`Amount`) as a function of the `Absorbance`. Does it look linear?
+
+```{r}
+plot(Amount ~ Absorbance, data = ore_df)
+```
+
+## 4.2 Transforming the data
+
+The relationship between these two variables is clearly not linear. We hope that there exists a simple transformation that make this data linear.
+
+Work you way through each of the following transformations applied to the `Amount`. Which of these best linearises this data?
+
+- `sqrt(x)`
+- `log(x)`
+- `x^(1/3)` (cubed root)
+- `x^2` (squared)
+- `x^3` (cubed)
+
+Using the formula notation in `R` we can put these transformations directly in the left-hand side of tilde  in `plot()` or `lm()`
+
+```{r}
+plot(sqrt(Amount) ~ Absorbance, data = ore_df)
+```
+
+```{r}
+# plot(log(...) ~ ..., data = ...)
+plot(log(Amount) ~ Absorbance, data = ore_df)
+```
+
+```{r}
+# Another plot()
+plot(Amount^(1/3) ~ Absorbance, data = ore_df)
+```
+
+```{r}
+# Another plot()
+plot(Amount^2 ~ Absorbance, data = ore_df)
+```
+
+```{r}
+# Another plot()
+plot(Amount^3 ~ Absorbance, data = ore_df)
+```
+
+Once you have found the best transformation, we can create a model on the linearised data:
+
+
+```{r}
+# model <- lm(... ~ Amount, data = ...)
+# summary(model6)
+ore_model <- lm(Amount^(1/3) ~ Absorbance, data = ore_df)
+summary(ore_model)
+```
+
+## 4.3 Assessing goodness of fit
+
+How does well does this model work for our transformed data set?
+
+Let's plot the model, residuals, and QQ plot:
+
+```{r}
+plot(Amount^(1/3) ~ Absorbance, data = ore_df)
+lines(ore_df$Absorbance, ore_model$fitted.values, col = "red")
+```
+
+```{r}
+plot(ore_model)
+```
+
+## 4.4 Confidence interval
+
+Remember that our model is subject to a certain amount of uncertainty which is captured by the **confidence** and **prediction** intervals.
+
+Use the `confint(model)` function to get a matrix with the lower and upper values for the model's confidence intervals for each of the estimated model coefficients.
+
+```{r}
+confint(ore_model)
+```
+
+Use the `predict(model_name, interval = "prediction")` function to get a matrix of the lower and upper *prediction* intervals around each fitted value
+
+```{r}
+# predictions <- predict(..., interval = "...")
+predictions <- predict(ore_model, interval = "prediction")
+head(predictions)
+```
+
+## 4.5 Inverting the transformation
+
+To make predictions of the actual ore fraction, we need to reverse the transformation so that the predicted values are in the original units, i.e., apply the inverse transformation.
+
+For example, if we had chosen `x^2` as our transformation, we would need to apply a square root to get meaningful predictions, e.g., `sqrt(prediction[, "fit"])`.
+
+Find the inverse transformation and plot the predicted values of `Amount` and the lower and upper confidence interval:
+
+```{r}
+# Apply the inverse transformation to each of these columns:
+fitted_values <- predictions[,"fit"]^3
+pi_lwr = predictions[,"lwr"]^3
+pi_upr = predictions[,"upr"]^3
+
+# Use polygon() to plot the shaded prediction interval
+plot(Amount ~ Absorbance, data = ore_df, main = "Ore Model")
+lines(ore_df$Absorbance, fitted_values, col = "blue", lwd = 3)
+polygon(x = c(ore_df$Absorbance, rev(ore_df$Absorbance)), 
+        y = c(pi_upr, rev(pi_lwr)), 
+        col = rgb(0,0,1,0.2), lty = 0)
+```
+
+
+
+
