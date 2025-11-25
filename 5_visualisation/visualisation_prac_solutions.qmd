@@ -1,6 +1,6 @@
 ---
 title: "Practical 5: Visualisation"
-subtitle "Solutions"
+subtitle: "Solutions"
 format: html
 ---
 

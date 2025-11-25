@@ -104,7 +104,7 @@ Most of the modules will consist of a lecture/discussion component followed by a
 ::: {style="font-size: 60%"}
 * PhD in chemical engineering, but came to statistics through my work as a research engineer working on solid rocket propellants
 * Joined Curtin in 2015 after ~20 years working with CSIRO as an applied statistician in industrial statistics, cancer biomarkers, bioinformatics, imaging, and climate research
-* For the last 5 years, I've been part of the Centre for Transforming Maintenance through Data Science
+* For the last 6 years, I've been part of the Centre for Transforming Maintenance through Data Science
 :::
 
 ## CIDS
@@ -117,23 +117,14 @@ Most of the modules will consist of a lecture/discussion component followed by a
 :::
 </center>
 
-## Leigh and Torrance
+## Leigh Tyers
 
-:::: {.columns}
+![](images/LeighTyers.png){fig-align="center" height="500px"}
 
-::: {.column width="50%"}
-![](images/LeighTyers.png){height="500px"}
-:::
-
-::: {.column width="50%"}
-![](images/TorranceHodgson.png){height="500px"}
-:::
-
-::::
 
 ## Over to you
 
-* Your role at Alcoa?
+* Your role at Alcoa/BHP?
 
 * Previous experience with data analysis?
 
@@ -214,8 +205,36 @@ Source: [ColumnFive](https://www.columnfivemedia.com/work/infographic-intelligen
 Newsletter of the North American Chapter of the International Chemometrics Society, April 1999.
 :::
 
-## Data science at Alcoa: the present?
+## Data science at Alcoa/BHP: the present?
+
+- predicting pipe degradation
+- estimating the failure time distribution of idlers in the presence of censoring (and lots of missing data!)
+- modelling and predicting conveyor belt wear
+- computer vision/image analysis for assessing asset degradation
 
 ## The data science loop
 
 ![](images/DSProcess.png){fig-align="center" height="475px"}
+
+## The elephant in the room ...
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+::: {style="font-size: 70%"}
+::: {.incremental}
+- Will LLMs/generative AI make understanding how to code and knowing the principles of data science obsolete?
+    - No!
+
+- Knowing how to code and understanding the principles means that you'll be less likely to be misled by LLMs and you'll be more effective and efficient.
+:::
+:::
+
+:::
+
+::: {.column width="60%"}
+![](images/AI_The_elephant_in_the_room.jpg){height="475px"}
+:::
+
+::::
