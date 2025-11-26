@@ -95,7 +95,7 @@ p_i = f(\beta_0 + \beta_1 x_i),
 $$
 or, alternatively,
 $$
-f^{-1}(p_i) = g(p_i) = \beta_0 + \beta_1 x_i)
+f^{-1}(p_i) = g(p_i) = \beta_0 + \beta_1 x_i
 $$
 :::
 
