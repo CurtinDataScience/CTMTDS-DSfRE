@@ -1043,9 +1043,9 @@ prediction.summary_frame(alpha = 0.05)  # 95% percentile window
 ::: {.column width="50%"}
 ::: {style="font-size: 70%"}
 * In this example, we're predicting the value of thickness at given times. 
-* What we'd like to have is a confidence interval for the failure time; it's possible to graphically extrapolate the intervals for thickness ('extrapolated intervals')
-* In reliability analysis, it is much more common to ask the question, "What is the probability of failure (however defined) at some time $t$ and what is the interval for the _probability_?"
-  * Can do so by calculating the _failure time distribution_
+* What we'd like to have is a confidence interval for the failure time; in the engineering literature, graphically extrapolating the intervals to the time axis is common, but ...
+* In reliability analysis, we ask the question, "What is the probability of failure (however defined) at some time $t$ and what is the interval for the _probability_?"
+  * Can do so by calculating the _failure time distribution_ (advanced topic!)
 :::
 :::
 
