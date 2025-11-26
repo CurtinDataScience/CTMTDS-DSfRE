@@ -1,12 +1,10 @@
-# DSfRE Training working June 2025
-A repo for hosting training material for the DSfRE workshop
+# DSfRE Training working November 2025
+A repository for hosting training material for the DSfRE workshop
 
 
 ## Workshop Organisers
 - Aloke Phatak
 - Leigh Tyers
-- Torrance Hodgson
-
 
 ## Attendees
 1. In Seeq, click the git icon on the left hand side.
@@ -25,7 +23,7 @@ python -m pip install requirements.txt
 ```
 
 
-### Building QMD Files
+### Building .qmd Files
 In a terminal, navigate to the directory you wish to build, activate your environment and run:
 ```sh
 quarto preview <path_to_qmd_file.qmd> --no-browser
