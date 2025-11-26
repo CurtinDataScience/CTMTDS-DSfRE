@@ -384,7 +384,7 @@ df.to_parquet(
 
 ## Pandas `DataFrame`
 
-A DataFrame is a 2D tabular data structure provided by the [`Pandas`](https://pandas.pydata.org/) library:
+A `DataFrame` is a 2D tabular data structure provided by the [`Pandas`](https://pandas.pydata.org/) library:
 
 * It is like an Excel spreadsheet made up of rows and columns (known as `Series`).
 * Columns are **strongly typed** but types may vary between columns (columns can be of different types)
