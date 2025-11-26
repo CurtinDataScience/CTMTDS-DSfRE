@@ -54,12 +54,12 @@ import matplotlib.pyplot as plt
 
 - Because we are sampling at adjacent points in time, \emph{serial} correlation is introduced
     
-- Example: data collected on daily maximum temperatures can be considered as a sequence 
+- Example: daily maximum temperatures over a year constitute a time series 
 
 - Time series data consist of a list of numbers $\{x_t\}$ and information about the times those numbers were recorded
 :::
 
-::: {style="font-size: 85%"}
+::: {style="font-size: 90%"}
 ## Visual display of time series
 
 - The first step in analysis of time series data is to plot the data!
@@ -68,9 +68,8 @@ import matplotlib.pyplot as plt
 
     - linear and nonlinear trends: long-term increase or decrease in the data
     - seasonality: when a series is influenced by seasonal factors, e.g., month, day of the week
-    - cycles/quasi-periodicities: data exhibits rises and falls that are \emph{not} of fixed period
-    - changes in variability
-    - irregular fluctuations
+    - cycles/quasi-periodicities: data exhibits rises and falls that are *not* of fixed period
+    - changes in variability, irregular fluctuations
 :::    
 
 ## Passenger counts for MEL-SYD 
