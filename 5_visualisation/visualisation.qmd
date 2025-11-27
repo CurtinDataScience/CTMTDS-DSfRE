@@ -533,7 +533,7 @@ plt.show()
 
 </center>
 
-## Getting fancy: animation
+## Getting fancy—animation
 
 <!-- Fake cell to make code cleaner -->
 ```{python}
